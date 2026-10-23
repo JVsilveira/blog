@@ -83,3 +83,19 @@ Resultados desta implementação e limitações estão em `docs/progresso.md`. I
 ## Identidade SilfonTech — 23/10/2026
 
 Marca definida pelo proprietário. Nome, slug e desenho do monograma ST ficam em `src/config/brand.ts`, consumidos pelo site e pelo painel. Tema claro com azul preservado. Ícones públicos/editoriais usam ST em branco sobre #1757B8. Capa de compartilhamento 1200×630 em `public/og-blog.png`, com fonte vetorial editável `public/og-blog.svg`, reutilizando a descrição editorial e os tópicos já existentes. Domínio permanece pendente; não criar origem fictícia a partir do nome.
+
+## Identidade com bússola — 23/10/2026
+
+Proprietário forneceu cinco variações da marca. A assinatura principal usa o arquivo original Logotipo SilfonTech com bússola geométrica-1.png, sem filtros, edição raster ou reconstrução das letras. Cópias locais em public/brand e admin/public/brand permitem uso no site estático e no servidor editorial. BrandLogo compartilha caminho/alt centralizados em brand.ts e dimensões intrínsecas; object-fit ajusta apenas a apresentação no layout. Nenhuma imagem remota ou fonte externa foi adicionada.
+
+Cabeçalho branco com filete azul, logotipo colorido e links escuros; rodapé e login usam a mesma assinatura. O símbolo da bússola foi adaptado em SVG simplificado para leitura no favicon, substituindo o monograma ST anterior. Capa social SVG/PNG preserva o texto e incorpora a assinatura fornecida. Versões com brilho não foram usadas sobre superfícies claras para manter definição da marca em tamanho pequeno.
+
+Paleta: navy #0C315B, azul #1259B5, ciano #00B7DF, texto #14263D, superfície #F3F7FC e branco. Ciano reservado a elementos gráficos; textos e ações usam cores escuras. Tokens compartilhados atualizam site e painel, preservando estados semânticos. Fonte de sistema nos controles/títulos e Georgia na leitura editorial preservadas. Navegação, textos, categorias, publicação e integrações mantidos. Esta direção substitui o cabeçalho azul inverso descrito anteriormente.
+
+### Correção solicitada pelo proprietário — faixa azul preservada
+
+O proprietário esclareceu que a redução percebida era da área azul, não do tamanho do logotipo. Desfeito o aumento de altura/largura e restaurado o cabeçalho integral azul #174A93, hover #123D7A, navegação e foco brancos. Mantidas alturas anteriores de 96 px desktop/80 px móvel e assinatura de 240/184 px. No cabeçalho azul, a assinatura original recebe apresentação monocromática branca por CSS para legibilidade; o arquivo fornecido permanece intacto e segue colorido no rodapé, login e capa social. O painel utiliza os mesmos tokens inversos. Esta correção substitui a decisão anterior de cabeçalho branco e o aumento posterior de escala.
+
+### Logotipo vetorial colorido no cabeçalho
+
+Após o proprietário apontar perda de cor/nitidez, retirado o filtro monocromático. A marca principal passa a SVG derivado deterministicamente dos contornos do PNG fornecido, com traçado Potrace e preenchimentos navy/azul/ciano; nenhuma fonte substituída nem imagem gerada por IA. Eliminadas pequenas regiões de ruído na extração de contornos e preservado o PNG original. ViewBox ajustado ao desenho, dimensões intrínsecas 2050×470 e object-fit contain evitam corte/deformação. O cabeçalho azul permanece com sua altura original; base branca restrita ao logotipo garante contraste sem tornar a marca branca. O mesmo tratamento vale para o painel; login/rodapé seguem coloridos sem base adicional. Capa social passa a incorporar a fonte SVG. Arquivo vetorial com aproximadamente 8,5 KB, em vez do PNG de aproximadamente 434 KB usado antes.

@@ -1,4 +1,4 @@
-import {brand} from "../../../src/config/brand";
+import {BrandLogo} from "../../../src/components/BrandLogo";
 import { redirect } from "next/navigation";
 import { configured } from "../../lib/config";
 import { canonicalPage, currentSession } from "../../lib/request";
@@ -14,7 +14,7 @@ export default async function Login({
   const error = (await searchParams).error;
   return (
     <main id="conteudo" className="login-page" tabIndex={-1}>
-      <div className="login-brand">{brand.name}</div>
+      <div className="login-brand"><BrandLogo /></div>
       <section className="login-panel">
         <h1>Seu espaço de escrita.</h1>
         <p className="intro">

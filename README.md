@@ -22,7 +22,7 @@ Os documentos abaixo registram a evolução do projeto. Estados de implementaç�
 
 ### Planejamento inicial
 
-Planejamento e base técnica local da etapa 01; o portal editorial completo ainda não foi implementado. Elaborado para João, em pt-BR. Marca SilfonTech definida pelo proprietário; domínio ainda pendente. Objetivo: portal de suporte e escolhas de tecnologia, começando com custo financeiro próximo de zero, monetizado por afiliados e futuramente anúncios.
+Planejamento e base técnica local da etapa 01; o portal editorial completo ainda não foi implementado. Elaborado para João, em pt-BR. Marca SilfonTech definida pelo proprietário; domínio adquirido: silfontech.com.br. Hospedagem e apontamento DNS pendentes. Objetivo: portal de suporte e escolhas de tecnologia, começando com custo financeiro próximo de zero, monetizado por afiliados e futuramente anúncios.
 
 ## Como usar
 1. Copie este diretório para a raiz de um repositório novo ou coloque os planos/prompts em diretórios equivalentes; preserve os caminhos ou ajuste todas as referências. O AGENTS.md deve ficar na raiz que rege o código. Se já existir, integre sem apagar regras anteriores.

@@ -94,7 +94,9 @@ p {
   text-decoration: none;
   min-height: 44px;
 }
-.site-header .brand { color: var(--header-text); }
+.site-header .brand { color: var(--header-text); flex-shrink: 0; }
+.brand-logo { display: block; width: 240px; height: 64px; object-fit: contain; object-position: center; }
+.site-header .brand-logo { background: var(--background); padding: 8px 10px; border-radius: 6px; }
 .desktop-nav {
   display: flex;
   gap: var(--space-6);
@@ -109,6 +111,9 @@ p {
 .desktop-nav a:hover {
   color: var(--header-text);
   text-decoration: underline;
+  text-decoration-color: currentColor;
+  text-underline-offset: 8px;
+  text-decoration-thickness: 2px;
 }
 .menu-trigger {
   display: none !important;
@@ -330,38 +335,34 @@ details p {
 }
 .site-footer {
   border-top: 1px solid var(--border);
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 32px;
-  padding: 48px 0 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 20px 0;
   color: var(--muted);
 }
-.site-footer strong {
-  font-size: 22px;
-  color: var(--text);
-}
-.site-footer p {
-  margin: 8px 0;
-}
 .site-footer nav {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 4px 24px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 24px;
 }
 .site-footer nav a {
-  min-height: 44px;
-  display: flex;
+  min-height: 36px;
+  display: inline-flex;
   align-items: center;
-  font-size: 15px;
+  font-size: 13px;
+  line-height: 1.5;
+  text-underline-offset: 3px;
 }
-.small,
-.footer-note {
-  font-size: 14px;
-}
-.footer-note {
-  grid-column: 1/-1;
+.small { font-size: 14px; }
+.site-footer .footer-note {
+  max-width: none;
+  margin: 12px 0 0;
   border-top: 1px solid var(--border);
-  padding-top: 24px;
+  padding-top: 12px;
+  font-size: 12px;
+  line-height: 1.6;
 }
 .document {
   max-width: var(--reading-width);
@@ -489,6 +490,7 @@ dialog nav a {
   .header-inner {
     min-height: 80px;
   }
+  .brand-logo { width: 184px; height: 50px; }
   .brand {
     font-size: 21px;
     gap: 8px;
@@ -508,8 +510,7 @@ dialog nav a {
   }
   .paths,
   .empty-trails,
-  .method-note,
-  .site-footer {
+  .method-note {
     grid-template-columns: 1fr;
     gap: 24px;
   }
@@ -533,8 +534,11 @@ dialog nav a {
     margin-top: 32px;
   }
   .site-footer nav {
-    grid-template-columns: 1fr 1fr;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 16px;
   }
+  .site-footer nav a { min-height: 44px; }
   .edition-note {
     gap: 4px 8px;
     font-size: 13px;
@@ -623,7 +627,7 @@ textarea { resize: vertical; }
   :focus-visible { outline-color: Highlight; }
 }
 
-/* Referência Smashing: navegação forte e descoberta editorial, em azul. */
+/* Faixa azul original com assinatura branca para contraste. */
 .site-header :is(.brand, .desktop-nav a, .menu-trigger):focus-visible {
   outline-color: var(--focus-inverse);
 }

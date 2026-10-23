@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { site } from "../config/site";
 export const institutionalLinks = [
   ["sobre", "Sobre"],
   ["contato", "Contato"],
@@ -11,11 +10,6 @@ export const institutionalLinks = [
 export function Footer() {
   return (
     <footer className="site-footer">
-      <div>
-        <strong>{site.name}</strong>
-        <p>Notícias e opinião, com fontes e responsabilidade.</p>
-        <p className="small">Edição em preparação, por {site.author}.</p>
-      </div>
       <nav aria-label="Institucional">
         {institutionalLinks.map(([slug, title]) => (
           <Link key={slug} href={`/${slug}/`}>

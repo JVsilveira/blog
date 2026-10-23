@@ -5,7 +5,7 @@ import { config } from "../lib/config";
 import { titleAIStatus } from "../lib/title-ai";
 import { Dashboard } from "../components/Dashboard";
 export const dynamic = "force-dynamic";
-export default async function Page() {
+export default async function Page({searchParams}:{searchParams:Promise<{mercadolivre?:string}>}) {
   await canonicalPage("/");
   const session = await currentSession();
   if (!session) redirect("/login");
@@ -15,8 +15,11 @@ export default async function Page() {
   } catch {
     /* Falha recuperável pela ação Recarregar. */
   }
+  const result=(await searchParams).mercadolivre;
   return (
     <Dashboard
+      initialTab={result==='connected'||result==='error'?'hardware':'articles'}
+      mercadoFeedback={result==='connected'||result==='error'?result:undefined}
       email={session.email}
       name={session.name}
       picture={session.picture}

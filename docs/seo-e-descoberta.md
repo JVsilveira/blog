@@ -2,7 +2,7 @@
 
 ## Estado atual
 
-O portal ainda não tem domínio definido. A versão local continua com noindex e robots bloqueando rastreamento; nenhum domínio fictício foi configurado. Os dois artigos reais permanecem rascunhos. As melhorias locais preparam o lançamento, não comprovam presença em buscadores ou respostas de IA.
+O proprietário adquiriu silfontech.com.br em 23/10/2026. A origem pública está configurada como https://silfontech.com.br; hospedagem e apontamento DNS ainda pendentes. A versão local continua com noindex e robots bloqueando rastreamento; nenhum domínio fictício foi configurado. Os dois artigos reais permanecem rascunhos. As melhorias locais preparam o lançamento, não comprovam presença em buscadores ou respostas de IA.
 
 ## Configuração de lançamento
 
@@ -63,3 +63,13 @@ A busca com IA usa parte da mesma base de descoberta: conteúdo acessível e con
 - [Google: dados estruturados de artigos](https://developers.google.com/search/docs/appearance/structured-data/article)
 - [Google: conteúdo útil e confiável](https://developers.google.com/search/docs/fundamentals/creating-helpful-content)
 - [OpenAI: crawlers e busca](https://developers.openai.com/api/docs/bots)
+
+## Produção Cloudflare — atualização de 23/10/2026
+
+Solicitação do proprietário autoriza preparar indexação das publicações. `npm run build` executa scripts/build-public.ts: em Pages (`CF_PAGES=1`) e branch `main`, define como padrão a origem real https://silfontech.com.br, indexação true e rotas editoriais. Respeita desligamento explícito por NEXT_PUBLIC_SITE_INDEXING=false. Variáveis explícitas de origem/rotas continuam aceitas. Branches de preview têm indexação forçada para false, mesmo que herdem true de produção. Builds locais continuam sem liberar indexação automaticamente. Node fixado em .node-version 24.15.0, compatível com o npm usado pelo projeto e já validado no build remoto.
+
+Coleções de notícias/guias vazias não entram no sitemap; aliases de opinião apontam para Notícias e não criam entrada duplicada. Notícias publicadas preservam seu título no H1, title, Open Graph, Twitter e headline dos dados estruturados; autoria/datas/idioma/canonical/hreflang permanecem vinculados ao conteúdo real. Publisher identifica a publicação SilfonTech e sua marca, sem inventar foto editorial ou credenciais da autoria. Metadados de artigo não garantem escolha do mesmo título pelo Google nem posição nos resultados.
+
+No estado atual só há dois rascunhos: build de produção torna as três homes indexáveis, mas não há notícias aprovadas para apresentar nas buscas. Publicar pelo painel e disponibilizar o export atualizado continua necessário. Depois de o domínio estar ativo, cadastrar a propriedade no Google Search Console/Bing Webmaster Tools, enviar https://silfontech.com.br/sitemap.xml e usar Inspeção de URL para a primeira notícia. Nenhum token de verificação foi inventado e nenhum rascunho foi publicado automaticamente.
+
+Acesso universal não depende de uma opção de Chrome no aplicativo: o deploy é HTML/CSS/JS público. A rede consultada devolveu 127.0.0.1 para o host pages.dev, enquanto Google/Cloudflare DNS retornaram IPs legítimos e HTTPS validado respondeu 200. O domínio próprio permanece sem A enquanto o Registro.br está em transição. Concluir nameservers/Pages Custom domains/HTTPS, adicionar www com redirecionamento ao domínio raiz e manter páginas públicas sem Cloudflare Access ou desafio obrigatório. Manter Search/Agent permitidos no AI Crawl Control. Não há como o código garantir acesso contra bloqueios de provedor, firewall, extensão ou aparelho; trocar DNS no Chrome foi um diagnóstico/contorno local, não uma exigência do site.

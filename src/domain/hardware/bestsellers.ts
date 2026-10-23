@@ -10,7 +10,7 @@ export function affiliatePhones<T extends AffiliatePhone>(items:T[],links:StoreL
  return items.flatMap(item=>{
   if(item.kind!=='phone'||item.deviceType!=='phone')return [];
   const link=links.find(link=>link.hardwareId===item.id&&link.retailer==='mercadolivre');if(!link)return [];
-  const product=retailerProduct(link.href);const rank=fresh?ranking.items.find(row=>row.id===product.id&&row.type===(product.catalog?'PRODUCT':'ITEM')):undefined;
+  const product=link.productId&&link.catalog!==undefined?{id:link.productId,catalog:link.catalog}:retailerProduct(link.href);const rank=fresh?ranking.items.find(row=>row.id===product.id&&row.type===(product.catalog?'PRODUCT':'ITEM')):undefined;
   return [{item,link,position:rank?.position??null}];
  }).sort((a,b)=>(a.position??Infinity)-(b.position??Infinity)||a.item.name.localeCompare(b.item.name));
 }

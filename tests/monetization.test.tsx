@@ -45,7 +45,8 @@ describe('fronteiras de monetização',()=>{
   try {
    Object.assign(site,{origin:'https://portal.test',seo:{indexingApproved:true,approvedPaths:['/','/ajuda/','/ajuda/?busca=x','/celulares/comparar/','/privacidade/']}});
    const urls=(await sitemap()).map(x=>x.url);
-   expect(urls).toContain('https://portal.test/ajuda/');
+   expect(urls).toContain('https://portal.test/');
+   expect(urls).not.toContain('https://portal.test/ajuda/'); // coleção sem artigos publicados
    expect(urls.join(' ')).not.toMatch(/backup-windows|backup-antes|\?|comparar|sem-publicacao/);
   } finally {Object.assign(site,previous);}
  });

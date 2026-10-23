@@ -83,3 +83,14 @@ it('prioriza fotos de celulares existentes antes de novos modelos do mesmo grupo
 it('publica link de afiliado só depois de importar exatamente o aparelho identificado',async()=>{
  const link={retailer:'amazon' as const,href:'https://www.amazon.com.br/dp/B012345678?tag=fixture-20'},mock=deps();mock.fetchItem.mockResolvedValue({...hardwareFixture('phone')[0]!,id:'icecat-phone-123',status:'draft',reviewer:null,reviewedAt:null});const job=await queueHardware(root,'import',[{kind:'phone',reference:{gtin:'7891234567895'}}],true,link);await executeHardware(root,job,mock);const links=JSON.parse(await readFile(path.join(root,'out/data/hardware/links.json'),'utf8'));expect(links).toEqual([expect.objectContaining({hardwareId:'icecat-phone-123',href:link.href,retailer:'amazon'})]);
 });
+
+it.each(['phone','cpu','ram'] as const)('associa link Mercado Livre e ID resolvido somente à ficha importada de %s',async kind=>{
+ const link={retailer:'mercadolivre' as const,href:'https://meli.la/fixture',productId:'MLB123456789',catalog:false},mock=deps();mock.fetchItem.mockResolvedValue({...hardwareFixture(kind)[0]!,id:`icecat-${kind}-123`,status:'draft',reviewer:null,reviewedAt:null});
+ await executeHardware(root,await queueHardware(root,'import',[{kind,reference:{gtin:'7891234567895'}}],true,link),mock);
+ expect(JSON.parse(await readFile(path.join(root,'out/data/hardware/links.json'),'utf8'))).toEqual([expect.objectContaining({...link,hardwareId:`icecat-${kind}-123`})]);
+});
+it('não publica associação quando o provedor não encontra a ficha',async()=>{
+ const mock=deps();mock.fetchItem.mockRejectedValue(new IcecatError('Ficha indisponível.'));
+ await executeHardware(root,await queueHardware(root,'import',[request],true,{retailer:'mercadolivre',href:'https://meli.la/fixture',productId:'MLB123456789',catalog:false}),mock);
+ expect(JSON.parse(await readFile(path.join(root,'out/data/hardware/links.json'),'utf8'))).toEqual([]);
+});

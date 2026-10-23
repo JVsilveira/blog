@@ -9,7 +9,7 @@
   "packageManager": "npm@12.2.1",
   "scripts": {
     "dev": "next dev",
-    "build": "npm run validate:content && next build && node --import tsx scripts/finalize-export.ts",
+    "build": "node --import tsx scripts/build-public.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "test": "vitest run",

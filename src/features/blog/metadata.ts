@@ -38,6 +38,7 @@ export function articleStructuredData(a: Article, author: string, origin: string
     datePublished:a.publishedAt, dateModified:a.updatedAt,
     articleSection:a.category, keywords:a.tags,
     author:{'@type':'Person', name:author}, mainEntityOfPage:url,
+    publisher:{'@type':'Organization',name:site.name,url:new URL('/',origin).href,logo:{'@type':'ImageObject',url:new URL('/brand/silfontech-logo.svg',origin).href,width:2050,height:470}},
     isPartOf:{'@type':'WebSite', '@id':new URL('/#website', origin).href, name:site.name, url:new URL('/', origin).href},
     ...(sources.length ? {citation:sources.filter(s => a.sourceIds.includes(s.id)).map(s => ({'@type':'CreativeWork', url:s.url, name:s.publisher}))} : {}),
   }, {

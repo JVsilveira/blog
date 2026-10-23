@@ -2,22 +2,25 @@
    Contratos e decisões de uso em docs/design-system.md. */
 :root {
   color-scheme: light;
+  --brand-navy: #0c315b;
+  --brand-blue: #1259b5;
+  --brand-cyan: #00b7df;
   --background: #ffffff;
-  --surface: #f3f6fb;
-  --elevated: #e8eff8;
-  --text: #182335;
-  --muted: #526176;
-  --border: #dbe3ed;
-  --primary: #1757b8;
-  --primary-solid: #1d4ed8;
-  --primary-hover: #1e40af;
+  --surface: #f3f7fc;
+  --elevated: #e7eff9;
+  --text: #14263d;
+  --muted: #4c6079;
+  --border: #d7e3ef;
+  --primary: #124f96;
+  --primary-solid: #1259b5;
+  --primary-hover: #0d4287;
   --on-primary: #ffffff;
   --success: #166534;
   --warning: #854d0e;
   --danger: #b42318;
   --control-border: #5e6d82;
-  --focus: #1d4ed8;
-  --selection: #1e40af;
+  --focus: #1259b5;
+  --selection: #0d4287;
   --header-background: #174a93;
   --header-hover: #123d7a;
   --header-text: #ffffff;

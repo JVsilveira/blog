@@ -37,3 +37,26 @@ it('artigo identifica autoria, língua e fontes públicas, sem perfil privado ou
   expect(graph[0].citation).toEqual(data.sources.filter(s => article.sourceIds.includes(s.id)).map(s => ({'@type':'CreativeWork',url:s.url,name:s.publisher})));
   expect(JSON.stringify(graph)).not.toMatch(/aggregateRating|googleusercontent|gmail.com|SearchAction/);
 });
+
+it('libera produção Pages no domínio próprio e impede indexação herdada em prévias',async()=>{
+ const {publicBuildEnvironment}=await import('../src/config/deployment');
+ expect(publicBuildEnvironment({}).NEXT_PUBLIC_SITE_INDEXING).toBeUndefined();
+ const production=publicBuildEnvironment({CF_PAGES:'1',CF_PAGES_BRANCH:'main'});
+ expect(production.NEXT_PUBLIC_SITE_URL).toBe('https://silfontech.com.br');
+ expect(production.NEXT_PUBLIC_SITE_INDEXING).toBe('true');
+ expect(production.NEXT_PUBLIC_SEO_APPROVED_PATHS).toContain('/noticias/');
+ expect(production.NEXT_PUBLIC_SEO_APPROVED_PATHS).not.toContain('/contato/');
+ const preview=publicBuildEnvironment({...production,CF_PAGES:'1',CF_PAGES_BRANCH:'feature/test'});
+ expect(preview.NEXT_PUBLIC_SITE_INDEXING).toBe('false');expect(preview.NEXT_PUBLIC_SEO_APPROVED_PATHS).toBe('');
+ expect(publicBuildEnvironment({...production,NEXT_PUBLIC_SITE_INDEXING:'false'}).NEXT_PUBLIC_SITE_INDEXING).toBe('false');
+});
+it('sitemap de coleções exige publicação real e tradução disponível, sem alias duplicado',async()=>{
+ const {sitemapCollectionAvailable}=await import('../src/features/publication/model');
+ const a={...fixture().articles[0]!,kind:'news' as const};
+ expect(sitemapCollectionAvailable('/noticias/',[])).toBe(false);
+ expect(sitemapCollectionAvailable('/noticias/',[{...a,status:'draft'}])).toBe(false);
+ expect(sitemapCollectionAvailable('/noticias/',[a])).toBe(true);
+ expect(sitemapCollectionAvailable('/blog/',[a])).toBe(false);
+ expect(sitemapCollectionAvailable('/en/news/',[a])).toBe(false);
+ expect(sitemapCollectionAvailable('/opiniao/',[a])).toBe(false);
+});

@@ -1,5 +1,5 @@
 "use client";
-import {brand} from "../../src/config/brand";
+import {BrandLogo} from "../../src/components/BrandLogo";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Markdown from "react-markdown";
@@ -55,7 +55,11 @@ export function Dashboard({
   csrf,
   initial,
   titleAI,
+  initialTab='articles',
+  mercadoFeedback,
 }: {
+  initialTab?:'articles'|'hardware';
+  mercadoFeedback?:'connected'|'error';
   email: string;
   name?: string;
   picture?: string;
@@ -66,7 +70,7 @@ export function Dashboard({
   const router = useRouter();
   const [workspace, setWorkspace] = useState<Workspace | null>(initial);
   const [tab, setTab] = useState<"articles" | "editor" | "sources" | "authors" | "hardware">(
-    "articles",
+    initialTab,
   );
   const [draft, setDraft] = useState<Draft>({ ...blank });
   const [editing, setEditing] = useState(false);
@@ -254,7 +258,7 @@ export function Dashboard({
     <>
       <header className="admin-header">
         <strong className="admin-brand">
-          {brand.name} <span>Área editorial</span>
+          <BrandLogo /> <span>Área editorial</span>
         </strong>
         <div className="admin-account">
           <AccountProfile email={email} name={name} picture={picture} />
@@ -299,7 +303,7 @@ export function Dashboard({
             </section>
           ) : (
             <>
-              {tab === "hardware" && <HardwareManager csrf={csrf} building={building} buildMessage={job?.message??""} onGenerate={generate} onDirtyChange={setDirty}/>}
+              {tab === "hardware" && <HardwareManager mercadoFeedback={mercadoFeedback} csrf={csrf} building={building} buildMessage={job?.message??""} onGenerate={generate} onDirtyChange={setDirty}/>}
               {tab === "articles" && (
                 <section>
                   <div className="page-heading">

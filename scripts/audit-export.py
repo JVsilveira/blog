@@ -13,8 +13,12 @@ class Document(HTMLParser):
         super().__init__(convert_charrefs=True)
         self.ids = set()
         self.refs = []
+        self.metadata_links = set()
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
+        if tag == 'link' and (attrs.get('rel') == 'canonical' or
+                             (attrs.get('rel') == 'alternate' and attrs.get('hreflang'))):
+            self.metadata_links.add(attrs.get('href'))
         if attrs.get('id'):
             self.ids.add(attrs['id'])
         for attr in ('href', 'src'):
@@ -36,6 +40,9 @@ for file, doc in pages.items():
             errors.append(f'{relative}: esquema não permitido em {tag}.{attr}')
             continue
         if url.netloc != 'preview.local':
+            # Canonical/hreflang declaram a origem pública; não carregam recursos.
+            if tag == 'link' and ref in doc.metadata_links and url.scheme == 'https':
+                continue
             if tag != 'a':
                 errors.append(f'{relative}: recurso externo {tag}.{attr}')
             continue
@@ -56,4 +63,4 @@ images = [f for f in root.rglob('*') if f.suffix in ('.png', '.jpg', '.webp', '.
 print(f'{len(pages)} HTML; {len(js)} arquivos JS; JS total gzip individual: {sum(len(gzip.compress(f.read_bytes())) for f in js)} bytes; imagens: {sum(f.stat().st_size for f in images)} bytes.')
 if errors:
     raise SystemExit('\n'.join(errors))
-print('Links, âncoras e recursos locais presentes; nenhum recurso HTML externo. Não verifica conteúdo remoto, execução JS ou aprovação editorial.')
+print('Links, âncoras e recursos locais presentes; nenhum recurso HTML externo carregado. Canonical/hreflang HTTPS permitidos. Não verifica conteúdo remoto, execução JS ou aprovação editorial.')

@@ -85,3 +85,15 @@ Integração preparada no servidor: consulta autenticada à categoria MLB1055 co
 Atualização automática diária pelo scheduler enquanto o painel está ligado; falhas recuam 15 minutos. Botão já existente Atualizar catálogo agora também força atualização do ranking após o job. Dados expiram para apresentação após 48 horas. Credenciais somente no servidor, HTTPS/hosts fixos, sem redirects, timeouts e resposta limitada a 1 MB. Publicação atômica em public/out, estado privado; não leva token/resposta de erro ao browser. Nenhuma nova conta, scraping ou faturamento habilitado. Ranking real segue pendente de autorização oficial e links reais.
 
 Referência oficial: [Mais vendidos / recurso highlights](https://developers.mercadolivre.com.br/pt_br/mais-vendidos-no-mercado-livre).
+
+## Conectar Mercado Livre pelo painel (23/10/2026)
+
+As credenciais de aplicativo `ML_ID_APP` e `ML_SECRET_KEY` são aceitas em `admin/.env.local`; os aliases `MERCADOLIVRE_CLIENT_ID` e `MERCADOLIVRE_CLIENT_SECRET` também. Não são access tokens. Em **Produtos e comparadores > Conexão com o Mercado Livre**, copie a URI de retorno exibida para a configuração do aplicativo no DevCenter. Ela é a origem do painel acrescida de `/auth/mercadolivre/callback`, exatamente, sem barra final. No ambiente local padrão: `http://localhost:4180/auth/mercadolivre/callback`. Se a origem mudar na hospedagem, registre a nova URI. Habilite PKCE S256 e permissões de leitura/renovação no aplicativo. Clique em **Conectar Mercado Livre** e autorize usando a conta principal.
+
+O servidor troca o código por tokens, valida state, cookie de transação e sessão Google, usa PKCE, impede reutilização e guarda os tokens exclusivamente em `.editorial-admin/mercadolivre.json` (permissão 600). A renovação usa refresh token rotacionado. Exige disco persistente e servidor Node. Não inserir tokens no código público, no Git ou no chat. `RETAILER_IMPORT_ENABLED=false` mantém bloqueio explícito; sem essa variável a conexão autorizada habilita o adaptador. O caminho manual `MERCADOLIVRE_ACCESS_TOKEN` continua exigindo `RETAILER_IMPORT_ENABLED=true`.
+
+O formulário **Vincular produto por link de afiliado** agora aceita celulares/tablets, processadores e RAM. Consulta oficial usa GTIN ou fabricante+MPN, recusa anúncios com múltiplas variantes e produtos inativos, preserva o link original e guarda o ID resolvido para ranking inclusive em links curtos. O catálogo e os seletores públicos exibem as associações das três categorias. Não preenche preços nem deduz variantes pelo título.
+
+Autorizar a API não cria links com comissão e não transforma a vitrine social em inventário acessível. Ainda são necessários os links individuais gerados no programa de afiliados ou um feed autorizado. Não há extração da vitrine por scraping nem parâmetros de comissão inventados. Consulta real e autorização dependem da ação do proprietário no Mercado Livre; os testes automatizados usam respostas sintéticas.
+
+Referências: [OAuth oficial](https://developers.mercadolivre.com.br/en_us/authentication-and-authorization) e [geração de links no programa de afiliados](https://www.mercadolivre.com.br/l/afiliados-gere-seus-links).

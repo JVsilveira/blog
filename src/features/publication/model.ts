@@ -21,3 +21,17 @@ export function articleLanguages(article:Article) {
  return links;
 }
 export const homeLanguages = {pt:homePath('pt'),en:homePath('en'),es:homePath('es')};
+
+/** Coleções vazias e aliases de opinião não entram no sitemap. */
+export function sitemapCollectionAvailable(path:string,articles:Article[]) {
+ if(['/opiniao/','/en/opinion/','/es/opinion/'].includes(path))return false;
+ const routes:Partial<Record<string,readonly [Locale,'news'|'blog']>>={
+  '/noticias/':['pt','news'],'/blog/':['pt','blog'],'/ajuda/':['pt','blog'],
+  '/en/news/':['en','news'],'/en/blog/':['en','blog'],
+  '/es/news/':['es','news'],'/es/blog/':['es','blog'],
+ };
+ const collection=routes[path];
+ if(!collection)return true;
+ const [locale,kind]=collection;
+ return articles.some(a=>a.status==='published'&&!!a.ownerApprovedAt&&!!a.publishedAt&&matchesPublicationKind(a,kind)&&!!localizeArticle(a,locale));
+}

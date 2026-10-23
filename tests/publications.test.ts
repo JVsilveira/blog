@@ -68,3 +68,15 @@ it('reúne notícia e opinião, prioriza destaques e mantém desempate estável 
  expect(filterPublications([news,opinion],'inexistente','Política')).toEqual([]);
  expect([blog,newer,news,opinion].map(a=>a.slug)).toEqual(['blog','newer','news','opinion']);
 });
+
+it('notícia preserva o título em metadados e schema, autoria e endereço de publicação',()=>{
+ Object.assign(site,{origin:'https://silfontech.com.br'});
+ const a={...translated(),kind:'news' as const};
+ const metadata=publicationMetadata(a,'pt','Autor sintético');
+ expect(metadata.title).toBe(a.title);
+ expect(metadata.openGraph).toMatchObject({title:a.title,type:'article',url:'https://silfontech.com.br/publicacoes/article-test/'});
+ expect(metadata.twitter).toMatchObject({title:a.title,description:a.description});
+ const graph=publicationStructuredData(a,'pt','Autor sintético',[])!;
+ expect(graph[0]).toMatchObject({headline:a.title,'@type':'NewsArticle',mainEntityOfPage:metadata.alternates?.canonical,publisher:{name:'SilfonTech',url:'https://silfontech.com.br/'}});
+ expect(JSON.stringify(graph)).not.toContain('googleusercontent');
+});
