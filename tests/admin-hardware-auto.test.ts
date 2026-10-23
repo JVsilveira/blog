@@ -1,0 +1,10 @@
+import {afterEach,beforeEach,expect,it,vi} from 'vitest';
+import {mkdtemp,rm,mkdir,writeFile} from 'node:fs/promises';import {tmpdir} from 'node:os';import path from 'node:path';
+const mocks=vi.hoisted(()=>({queueHardware:vi.fn(),executeHardware:vi.fn(),hardwareJob:vi.fn(),activeHardwareJob:vi.fn()}));
+vi.mock('../admin/lib/hardware',()=>mocks);
+import {automaticSync} from '../admin/lib/hardware-auto';
+let root:string;
+beforeEach(async()=>{root=await mkdtemp(path.join(tmpdir(),'portal-hardware-auto-'));mocks.queueHardware.mockReset().mockResolvedValue({id:'fixture'});mocks.executeHardware.mockReset().mockResolvedValue(undefined);mocks.hardwareJob.mockReset().mockResolvedValue(null);mocks.activeHardwareJob.mockReset().mockReturnValue(false);});
+afterEach(async()=>{await rm(root,{recursive:true,force:true});});
+it('continua carga sem aguardar outro dia e dorme 24 horas apenas quando a fila estiver vazia',async()=>{const now=Date.now();mocks.hardwareJob.mockResolvedValue({mode:'sync',state:'success',total:101,finishedAt:new Date(now-60000).toISOString()});await automaticSync(root,now);expect(mocks.executeHardware).toHaveBeenCalledTimes(1);mocks.hardwareJob.mockResolvedValue({mode:'sync',state:'success',total:1,finishedAt:new Date(now-60000).toISOString()});await automaticSync(root,now);expect(mocks.executeHardware).toHaveBeenCalledTimes(1);await automaticSync(root,now+86400001);expect(mocks.executeHardware).toHaveBeenCalledTimes(2);});
+it('respeita pausa do provedor e não sobrepõe job ativo',async()=>{await mkdir(path.join(root,'.editorial-admin'));await writeFile(path.join(root,'.editorial-admin/icecat-pause.json'),JSON.stringify({until:Date.now()+900000}));await automaticSync(root);expect(mocks.queueHardware).not.toHaveBeenCalled();await rm(path.join(root,'.editorial-admin/icecat-pause.json'));mocks.activeHardwareJob.mockReturnValue(true);await automaticSync(root);expect(mocks.queueHardware).not.toHaveBeenCalled();});

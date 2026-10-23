@@ -1,0 +1,23 @@
+# Regras para agentes de implementação
+
+Leia `planos/00-diretrizes-gerais.md` antes de qualquer alteração e `planos/01-arquitetura-e-dados.md` antes de alterar estrutura ou contratos. Leia também o plano e o prompt da etapa solicitada. Este AGENTS.md é uma síntese; os documentos detalhados continuam obrigatórios.
+
+- Objetivo ampliado em 22/10/2026: portal de notícias, opinião e blog de João sobre política, esporte, economia, tecnologia e outros temas, com edições pt/en/es; preservar guias e ferramentas técnicas. Direção em docs/portal-editorial-internacional.md. Receita por afiliados e, posteriormente, AdSense. Sem promessa de receita.
+- React + TypeScript strict. Next.js com geração estática como decisão inicial; não usar serviços pagos ou banco remoto no MVP público. Área editorial separada com Google OAuth autorizada em 22/10/2026; arquitetura e operação em docs/editorial/painel-google-oauth.md. Não adicionar login aos leitores.
+- Nome interno: Portal Tech. Marca e domínio definitivos estão pendentes; manter em configuração única e não inventar marca registrada, equipe ou depoimentos.
+- Notícias e opinião compartilham a seção Notícias (ajuste de 23/10/2026); destaque por ordem editorial e filtro por categorias reais. Evitar apresentação enumerando temas na abertura. Blog/guias preservados.
+- Traduções exigem conteúdo completo e revisão por idioma; não publicar versões em draft ou desatualizadas, nem apresentar original português como tradução. Preferência inicial pelo navegador, sem geolocalização por IP; manual disponível.
+- Tema claro com azul (direção autorizada em 22/10/2026; tokens em src/styles/tokens.css), contraste legível, navegação acessível por teclado e funcionamento móvel. Não produzir um dashboard como página inicial.
+- Atualização autorizada em 23/10/2026: comparadores Icecat sem aprovação por ficha. Carga inicial pelo índice Open completo, deltas diários e processamento contínuo em lotes retomáveis enquanto servidor Node estiver ativo. Painel com um botão de atualização e estatísticas; publicação automática exclusivamente de fichas do provedor, com atribuição e sem alegar revisão humana. Notícias e demais conteúdos mantêm revisão editorial.
+- Seletores dos comparadores usam miniaturas e busca por termos normalizados; comparador móvel sem campos de preço. Importação por links Amazon Brasil/Mercado Livre preparada, desativada até credenciais oficiais; identificar por GTIN/MPN e nunca inferir variante pelo título ou criar link de afiliado fictício.
+- Comparador móvel limitado a celulares/tablets (Icecat 119/1893/897), com filtros por tipo e fotos baixadas no servidor; nunca expor URLs assinadas/tokens nem usar logos como fotos de produto.
+- Comparadores de CPU/RAM/celular autorizados em 23/10/2026, com Icecat Product JSON preparado e token privado no header api-token; operação em docs/comparadores-e-fontes.md. Custo-benefício somente por benchmark equivalente e preços informados. Não usar dados Icecat em IA generativa.
+- Não inventar especificações, benchmarks, experiência pessoal, preços, estoque, licenças de imagem, links de afiliado ou avaliações.
+- Dados de demonstração marcados e bloqueados em produção; integração não configurada deve se apresentar indisponível, nunca simular sucesso.
+- Fonte, data e incerteza dos dados são parte do produto. Compatibilidade desconhecida não significa compatibilidade aprovada.
+- Sem preços atuais de varejistas até existir integração e permissão verificadas. Use “Consultar preço na loja”. Estimativas de orçamento devem ser explicitamente estimativas editoriais, quando permitidas, e não ofertas de varejistas.
+- Sugestões de títulos no painel usam Gemini/Google AI Studio, autorizado em 22/10/2026, somente com chave privada de projeto Free e sem ativar faturamento. Operação em docs/editorial/painel-google-oauth.md; sem login ChatGPT, modelo local ou fallback pago.
+- Não incluir credenciais no navegador. Orçamentos de clientes ficam apenas no dispositivo por padrão e nunca entram em analytics.
+- Executar somente a etapa pedida. Preservar trabalho existente e documentar decisões, testes, limitações e dependências em `docs/progresso.md`.
+- Completar tarefas locais reversíveis sem pedir confirmação a cada escolha. Publicação em produção, contratação, custos e envio a terceiros ficam fora dos prompts locais.
+- Não declarar testes ou verificações que não foram executados. Não deixar botões falsos, links # ou funcionalidades anunciadas como prontas sem implementação.

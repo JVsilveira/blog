@@ -1,0 +1,32 @@
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+.env*
+!.env.example
+.playwright-cli/
+output/playwright/
+
+output/blog-preview/
+
+output/recommendations-preview/
+
+output/pcs-preview/
+
+output/phones-preview/
+
+.editorial-admin/
+
+output/hardware-preview/
+
+# Generated Icecat feeds are rebuilt/synchronized from the private provider cache.
+public/data/hardware/
+
+public/images/hardware/
+
+# Runtime catalogue sample; regenerated alongside feeds and photos.
+src/data/hardware.json
+
+# Local release bundles, never source files.
+output/releases/
+*.log

@@ -1,0 +1,20 @@
+import {afterEach,beforeEach,expect,it,vi} from 'vitest';
+import {mkdtemp,readFile,rm} from 'node:fs/promises';import {tmpdir} from 'node:os';import path from 'node:path';
+import {refreshPhoneRanking} from '../admin/lib/phone-ranking';
+import {affiliatePhones,type PhoneRanking} from '../src/domain/hardware/bestsellers';
+import {hardwareFixture} from './fixtures/hardware';
+import type {StoreLink} from '../src/domain/hardware/retailers';
+let root:string;const now=Date.parse('2026-10-23T12:00:00Z'),env={RETAILER_IMPORT_ENABLED:'true',MERCADOLIVRE_ACCESS_TOKEN:'private-qa-only'};
+const category={id:'MLB1055',name:'Celulares e Smartphones'};
+const response={query_data:{highlight_type:'BEST_SELLER',criteria:'CATEGORY',id:'MLB1055'},content:[{id:'MLB123456',type:'PRODUCT',position:2},{id:'MLBU999999',type:'USER_PRODUCT',position:1}]};
+beforeEach(async()=>{root=await mkdtemp(path.join(tmpdir(),'portal-phone-ranking-'));});afterEach(async()=>{await rm(root,{recursive:true,force:true});});
+it('não consulta loja sem autorização configurada',async()=>{const fetcher=vi.fn();await refreshPhoneRanking(root,{},fetcher,now);expect(fetcher).not.toHaveBeenCalled();});
+it('publica ranking oficial validado, preserva posição e não inventa correspondência para USER_PRODUCT; cache de 24 horas',async()=>{const fetcher=vi.fn().mockResolvedValueOnce(new Response(JSON.stringify(category))).mockResolvedValueOnce(new Response(JSON.stringify(response)));await refreshPhoneRanking(root,env,fetcher,now);const raw=await readFile(path.join(root,'public/data/hardware/bestsellers.json'),'utf8');const feed=JSON.parse(raw);expect(feed.items).toEqual([{id:'MLB123456',type:'PRODUCT',position:2}]);expect(raw).not.toContain('private-qa-only');expect(await readFile(path.join(root,'out/data/hardware/bestsellers.json'),'utf8')).toBe(raw);await refreshPhoneRanking(root,env,fetcher,now+60000);expect(fetcher).toHaveBeenCalledTimes(2);expect(fetcher.mock.calls[1]?.[0]).toBe('https://api.mercadolibre.com/highlights/MLB/category/MLB1055');expect(fetcher.mock.calls[1]?.[1].redirect).toBe('error');});
+it('não publica categoria ou ranking incorretos e recua após falha sem vazar resposta privada',async()=>{for(const [cat,rank] of [[{id:'MLB1055',name:'Acessórios'},response],[category,{...response,query_data:{...response.query_data,highlight_type:'MOST_VISITED'}}]]){const fetcher=vi.fn().mockResolvedValueOnce(new Response(JSON.stringify(cat))).mockResolvedValueOnce(new Response(JSON.stringify(rank)));await refreshPhoneRanking(root,env,fetcher,now,true);await expect(readFile(path.join(root,'public/data/hardware/bestsellers.json'))).rejects.toMatchObject({code:'ENOENT'});const state=JSON.parse(await readFile(path.join(root,'.editorial-admin/phone-ranking-state.json'),'utf8'));expect(state).toEqual({state:'unavailable',nextAttempt:now+900000});}});
+it('ranking só aparece com correspondência exata, link real, celular e data válida; não transforma tablet ou popularidade em vendas',()=>{
+ const items=hardwareFixture('phone').map((i,n)=>({...i,deviceType:n===2?'tablet' as const:'phone' as const}));
+ const links:StoreLink[]=items.map((i,n)=>({hardwareId:i.id,retailer:'mercadolivre',href:'https://www.mercadolivre.com.br/produto/p/MLB'+(123456+n),addedAt:new Date(now).toISOString()}));
+ const rank:PhoneRanking={updatedAt:new Date(now).toISOString(),expiresAt:new Date(now+86400000).toISOString(),category:'MLB1055',items:[{id:'MLB123456',type:'PRODUCT',position:2},{id:'MLB123458',type:'PRODUCT',position:1}]};
+ const list=affiliatePhones(items,links,rank,now);expect(list).toHaveLength(2);expect(list[0]?.position).toBe(2);expect(list[1]?.position).toBeNull();expect(affiliatePhones(items,[],rank,now)).toEqual([]);expect(affiliatePhones(items,links,rank,now+86400001).every(i=>i.position===null)).toBe(true);
+ const wrongType={...rank,items:[{id:'MLB123456',type:'ITEM' as const,position:1}]};expect(affiliatePhones(items,links,wrongType,now).every(i=>i.position===null)).toBe(true);
+});

@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "status": "draft",
+  "createdAt": "2026-10-21T12:00:00-03:00",
+  "updatedAt": "2026-10-21T12:00:00-03:00",
+  "id": "backup-windows-escopo",
+  "slug": "backup-windows-escopo",
+  "title": "Windows Backup: confira o escopo antes de usar",
+  "description": "O que conferir na documentação e no seu contexto antes de configurar uma cópia.",
+  "authorId": "joao",
+  "category": "Windows e computador",
+  "tags": [
+    "backup",
+    "arquivos"
+  ],
+  "publishedAt": null,
+  "sourceIds": [
+    "microsoft-windows-backup"
+  ],
+  "relatedProductIds": [],
+  "methodology": "Rascunho por análise documental, sem teste local ou aprovação de João.",
+  "limitations": "Não é tutorial testado. Revisão humana, contexto de versão e ensaio de restauração pendentes.",
+  "ownerApprovedAt": null
+}

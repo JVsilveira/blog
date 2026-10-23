@@ -1,0 +1,57 @@
+/* Portal Tech: fundação editorial inspirada no Ghost Source.
+   Contratos e decisões de uso em docs/design-system.md. */
+:root {
+  color-scheme: light;
+  --background: #ffffff;
+  --surface: #f3f6fb;
+  --elevated: #e8eff8;
+  --text: #182335;
+  --muted: #526176;
+  --border: #dbe3ed;
+  --primary: #1757b8;
+  --primary-solid: #1d4ed8;
+  --primary-hover: #1e40af;
+  --on-primary: #ffffff;
+  --success: #166534;
+  --warning: #854d0e;
+  --danger: #b42318;
+  --control-border: #5e6d82;
+  --focus: #1d4ed8;
+  --selection: #1e40af;
+  --header-background: #174a93;
+  --header-hover: #123d7a;
+  --header-text: #ffffff;
+  --focus-inverse: #ffffff;
+  --font-body: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-editorial: Georgia, "Times New Roman", serif;
+  --text-small: 0.875rem;
+  --text-body: 1.0625rem;
+  --text-reading: 1.125rem;
+  --text-intro: 1.1875rem;
+  --text-title: clamp(2rem, 4.2vw, 3.5rem);
+  --leading-body: 1.7;
+  --leading-reading: 1.75;
+  --leading-heading: 1.16;
+  --weight-medium: 600;
+  --weight-heading: 700;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --content-width: 1280px;
+  --reading-width: 72ch;
+  --page-gutter: clamp(16px, 3vw, 48px);
+  --section-space: clamp(32px, 5vw, 64px);
+  --layout-gap: clamp(24px, 3.2vw, 48px);
+  --radius: 12px;
+  --radius-control: 12px;
+  --radius-panel: 16px;
+  --radius-pill: 999px;
+  --control-height: 48px;
+  --duration-feedback: 150ms;
+  --ease-feedback: ease-out;
+}

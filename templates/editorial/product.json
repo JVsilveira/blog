@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "SUBSTITUIR",
+  "slug": "SUBSTITUIR",
+  "status": "draft",
+  "createdAt": "DATA_ISO",
+  "updatedAt": "DATA_ISO",
+  "name": "PREENCHER modelo exato",
+  "brand": "PREENCHER fabricante",
+  "category": "mouse",
+  "specs": {
+    "category": "mouse",
+    "connectivity": null,
+    "handedness": null
+  },
+  "sourceIds": [],
+  "images": [],
+  "verificationStatus": "pending",
+  "verifiedAt": null,
+  "editorialStatus": "draft",
+  "ownerApprovedAt": null
+}

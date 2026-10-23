@@ -1,0 +1,26 @@
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
+  gap: var(--layout-gap);
+  align-items: center;
+  padding: var(--section-space) 0;
+}
+.hero h1 {
+  max-width: 21ch;
+}
+@media (max-width: 900px) {
+  .hero {
+    gap: 32px;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  }
+}
+@media (max-width: 767px) {
+  .hero {
+    grid-template-columns: 1fr;
+    padding: 32px 0;
+    gap: 32px;
+  }
+  .hero h1 {
+    max-width: 22ch;
+  }
+}

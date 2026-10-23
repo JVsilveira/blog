@@ -1,0 +1,8 @@
+import type { Hardware, HardwareKind } from '../../src/domain/hardware/contracts';
+export const hardwareDate='2026-10-23T12:00:00Z';
+export const hardwareSource={publisher:'Fonte sintética de testes',url:'https://example.org/specs',accessedAt:hardwareDate,license:'Somente fixture de teste',licenseUrl:'https://example.org/license'};
+export function hardwareFixture(kind:HardwareKind='cpu'):Hardware[] {
+ return [1,2,3].map(index=>({schemaVersion:1,publication:'editorial',id:`fixture-${kind}-${index}`,kind,name:`${kind==='cpu'?'Processador':kind==='ram'?'Memória':'Celular'} sintético ${index}`,brand:'Marca sintética',modelCode:`SINT-${index}`,variant:kind==='ram'?'Kit sintético 2 × 16 GB DDR5':`Variante sintética ${index}`,status:'published',createdAt:hardwareDate,updatedAt:hardwareDate,reviewedAt:hardwareDate,reviewer:'Revisor de fixture',demonstration:false,source:hardwareSource,
+ specifications:[{key:'sint-capacity',group:'Dados de teste',label:'Capacidade sintética',value:index*16,unit:'GB',source:hardwareSource},{key:'sint-unknown',group:'Dados de teste',label:'Campo não confirmado',value:null,unit:'',source:hardwareSource},{key:'sint-false',group:'Dados de teste',label:'Recurso ausente',value:false,unit:'',source:hardwareSource}],
+ benchmarks:[{id:'sint-benchmark',suite:'Teste sintético',version:'1',workload:'Carga sintética',unit:'pontos',direction:'higher',score:index*100,protocol:'Campanha sintética de teste 1',platform:'Plataforma sintética comum',settings:'Mesma configuração sintética',measuredAt:hardwareDate,source:hardwareSource}],limitations:['Dados sintéticos exclusivos para testes; nunca publicar este catálogo.']}));
+}

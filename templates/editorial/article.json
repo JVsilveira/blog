@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "SUBSTITUIR",
+  "slug": "SUBSTITUIR",
+  "status": "draft",
+  "createdAt": "DATA_ISO",
+  "updatedAt": "DATA_ISO",
+  "title": "PREENCHER título apurado",
+  "description": "PREENCHER resumo",
+  "authorId": "joao",
+  "category": "PREENCHER categoria",
+  "tags": [],
+  "publishedAt": null,
+  "sourceIds": [],
+  "relatedProductIds": [],
+  "methodology": "Rascunho: método e evidências pendentes.",
+  "limitations": "Não revisado; não publicar.",
+  "ownerApprovedAt": null
+}

@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "id": "SUBSTITUIR",
+  "status": "draft",
+  "createdAt": "DATA_ISO",
+  "updatedAt": "DATA_ISO",
+  "url": "PREENCHER_URL_HTTPS_REAL",
+  "publisher": "PREENCHER",
+  "accessedAt": "DATA_DA_CONSULTA",
+  "scope": [
+    "PREENCHER campos sustentados"
+  ]
+}

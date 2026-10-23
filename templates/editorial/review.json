@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "id": "SUBSTITUIR",
+  "status": "draft",
+  "createdAt": "DATA_ISO",
+  "updatedAt": "DATA_ISO",
+  "productId": "SUBSTITUIR",
+  "method": "documental",
+  "ownerApprovedAt": null,
+  "pros": [],
+  "cons": [],
+  "bestFor": [],
+  "avoidIf": [],
+  "uses": [],
+  "alternativeProductIds": []
+}

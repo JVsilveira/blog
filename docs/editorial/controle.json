@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "records": [
+    {
+      "kind": "article",
+      "id": "backup-antes-de-configurar",
+      "owner": "João (proprietário do portal; revisão pendente)",
+      "reviewer": null,
+      "nextReviewAt": null,
+      "note": "Rascunho herdado; sem aprovação humana."
+    },
+    {
+      "kind": "article",
+      "id": "backup-windows-escopo",
+      "owner": "João (proprietário do portal; revisão pendente)",
+      "reviewer": null,
+      "nextReviewAt": null,
+      "note": "Rascunho herdado; sem aprovação humana."
+    }
+  ]
+}

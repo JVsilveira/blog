@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "id": "SUBSTITUIR",
+  "status": "draft",
+  "createdAt": "DATA_ISO",
+  "updatedAt": "DATA_ISO",
+  "productId": "SUBSTITUIR",
+  "merchant": "PREENCHER",
+  "destinationUrl": "URL_HTTPS_REAL",
+  "enabled": false,
+  "verifiedAt": null,
+  "lastLinkCheck": null,
+  "editorialOrder": 0,
+  "pricePolicy": "none",
+  "currency": "BRL",
+  "sourceId": "SUBSTITUIR"
+}

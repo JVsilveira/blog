@@ -1,0 +1,167 @@
+.tool {
+  max-width: 1000px;
+  margin: 32px 0 64px;
+}
+.tool label {
+  display: block;
+  margin: 16px 0;
+}
+.tool input,
+.tool textarea,
+.tool select {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  margin-top: 6px;
+  padding: 10px;
+  background: var(--background);
+  color: var(--text);
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius-control);
+  font: inherit;
+}
+.tool textarea {
+  min-height: 100px;
+}
+.tool button {
+  min-height: 44px;
+  padding: 8px 16px;
+  margin: 6px 8px 6px 0;
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-control);
+  background: var(--elevated);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+.tool button:disabled {
+  color: var(--muted);
+  border-color: var(--muted);
+  cursor: not-allowed;
+}
+.tool fieldset {
+  min-width: 0;
+  margin: 24px 0;
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.tool legend {
+  font-size: 24px;
+  padding: 0 8px;
+}
+.group,
+.item,
+.local {
+  padding: 24px 0;
+  border-top: 1px solid var(--border);
+}
+.numbers {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+.notice:not(:empty) {
+  padding: 16px;
+  border-left: 3px solid var(--warning);
+  margin-bottom: 24px;
+}
+.total {
+  font-size: 26px;
+  font-weight: 700;
+}
+.document {
+  margin: 32px 0;
+  padding: 32px;
+  background: white;
+  color: #172033;
+  white-space: pre-wrap;
+  border-radius: var(--radius-control);
+}
+.document p {
+  margin: 0 0 12px;
+}
+.document table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.document th,
+.document td {
+  padding: 10px 6px;
+  border-bottom: 1px solid #687386;
+  text-align: left;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+.document th:first-child {
+  width: 43%;
+}
+.document h3,
+.document h4 {
+  margin: 20px 0 10px;
+}
+.summary {
+  margin: 24px 0;
+  break-inside: avoid;
+}
+@media (max-width: 600px) {
+  .numbers {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .tool fieldset {
+    padding: 16px;
+  }
+  .document {
+    padding: 12px;
+  }
+  .document table {
+    font-size: 12px;
+  }
+}
+@media print {
+  .editor {
+    display: none !important;
+  }
+  .tool {
+    max-width: none;
+    margin: 0;
+  }
+  .document {
+    page: quote;
+    margin: 0;
+    padding: 0;
+    color: #000;
+    background: #fff;
+    border-radius: 0;
+    font-size: 10pt;
+    line-height: 1.4;
+  }
+  .document table {
+    font-size: 9pt;
+  }
+  .document thead {
+    display: table-header-group;
+  }
+  .document tr {
+    break-inside: avoid;
+  }
+  .document h3,
+  .document h4 {
+    break-after: avoid;
+  }
+  .document p {
+    orphans: 3;
+    widows: 3;
+  }
+  .document th,
+  .document td {
+    padding: 8px 4px;
+  }
+  .document th:first-child {
+    width: 43%;
+  }
+}

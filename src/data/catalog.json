@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "sources": [
+    {
+      "schemaVersion": 1,
+      "status": "draft",
+      "createdAt": "2026-10-21T12:00:00-03:00",
+      "updatedAt": "2026-10-21T12:00:00-03:00",
+      "id": "microsoft-windows-backup",
+      "url": "https://support.microsoft.com/en-us/windows/experience/backup-recovery/back-up-and-restore-with-windows-backup",
+      "publisher": "Microsoft Support",
+      "accessedAt": "2026-10-21T22:59:51-03:00",
+      "scope": [
+        "Escopo de pastas e dependência de conta do Windows Backup"
+      ],
+      "note": "Consulta documental; não comprova teste local. Rever antes de publicar."
+    }
+  ],
+  "authors": [
+    {
+      "schemaVersion": 1,
+      "status": "draft",
+      "createdAt": "2026-10-21T12:00:00-03:00",
+      "updatedAt": "2026-10-21T12:00:00-03:00",
+      "id": "joao",
+      "name": "João",
+      "ownerApprovedAt": null
+    }
+  ],
+  "products": [],
+  "offers": [],
+  "reviews": []
+}

@@ -1,0 +1,57 @@
+{
+  "name": "portal-tech",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=22.12.0 <27",
+    "npm": ">=10 <13"
+  },
+  "packageManager": "npm@12.2.1",
+  "scripts": {
+    "dev": "next dev",
+    "build": "npm run validate:content && next build && node --import tsx scripts/finalize-export.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "validate:content": "node --import tsx scripts/validate-content.ts",
+    "validate:catalog": "npm run validate:content",
+    "smoke": "node --import tsx scripts/smoke.ts",
+    "serve:export": "python3 scripts/preview.py",
+    "test:blog-export": "node --import tsx scripts/test-blog-export.ts",
+    "test:recommendations-export": "node --import tsx scripts/test-recommendations-export.ts",
+    "test:pcs-export": "node --import tsx scripts/test-pcs-export.ts",
+    "test:phones-export": "node --import tsx scripts/test-phones-export.ts",
+    "test:hardware-export": "node --import tsx scripts/test-hardware-export.ts",
+    "hardware:sync": "node --import tsx scripts/sync-hardware.ts",
+    "hardware:import": "node --import tsx scripts/import-hardware.ts",
+    "editorial:new": "node --import tsx scripts/editorial-new.ts",
+    "test:editorial": "vitest run tests/editorial.test.ts",
+    "audit:export": "python3 scripts/audit-export.py",
+    "admin:dev": "next dev admin --hostname 127.0.0.1 --port 4180",
+    "admin:build": "next build admin --webpack",
+    "admin:start": "next start admin --hostname 127.0.0.1 --port 4180",
+    "admin:typecheck": "tsc -p admin/tsconfig.json --noEmit",
+    "test:admin": "vitest run tests/admin-*.test.ts",
+    "seo:check": "node --import tsx scripts/check-seo.ts"
+  },
+  "dependencies": {
+    "google-auth-library": "11.3.1",
+    "mdast-util-from-markdown": "2.1.0",
+    "next": "16.4.2",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "react-markdown": "10.1.0",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.5",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.4.2",
+    "tsx": "4.23.15",
+    "typescript": "6.0.3",
+    "vitest": "5.0.5"
+  },
+  "type": "module"
+}
