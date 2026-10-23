@@ -1,7 +1,10 @@
+import {brand} from "../../config/brand";
 import { importQuote, type Quote } from "../../domain/quotes/model";
-export const STORAGE_KEY = "portal-tech:quotes:v1";
+export const STORAGE_KEY = `${brand.slug}:quotes:v1`;
+export const LEGACY_STORAGE_KEY = "portal-tech:quotes:v1";
+export function clearQuotes(storage:Pick<Storage,"removeItem">){storage.removeItem(LEGACY_STORAGE_KEY);storage.removeItem(STORAGE_KEY);}
 export function readQuotes(storage: Pick<Storage, "getItem">): Quote[] {
-  const raw = storage.getItem(STORAGE_KEY);
+  const raw = storage.getItem(STORAGE_KEY) ?? storage.getItem(LEGACY_STORAGE_KEY);
   if (!raw) return [];
   if (raw.length > 6_000_000)
     throw Error(

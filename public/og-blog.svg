@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title description">
+  <title id="title">SilfonTech</title>
+  <desc id="description">Notícias e opinião, com fontes e responsabilidade.</desc>
+  <rect width="1200" height="630" fill="#F3F6FB"/>
+  <rect x="48" y="48" width="1104" height="534" rx="24" fill="#FFFFFF"/>
+  <rect x="88" y="88" width="80" height="80" rx="20" fill="#1757B8"/>
+  <path d="M14 7H6V16H14V25H6M19 7H29M24 7V25" transform="translate(88 88) scale(2.5)" fill="none" stroke="#FFFFFF" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="196" y="147" font-family="Arial, sans-serif" font-size="58" font-weight="700" fill="#1757B8">SilfonTech</text>
+  <path d="M88 212H1112" stroke="#DBE3ED" stroke-width="2"/>
+  <text x="88" y="320" font-family="Arial, sans-serif" font-size="52" font-weight="700" fill="#182335">Notícias e opinião,</text>
+  <text x="88" y="390" font-family="Arial, sans-serif" font-size="42" fill="#526176">com fontes e responsabilidade.</text>
+  <text x="88" y="514" font-family="Arial, sans-serif" font-size="25" fill="#1757B8">Notícias · Guias · Ferramentas TI · Recomendações</text>
+</svg>

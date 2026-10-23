@@ -1,6 +1,7 @@
+import {brand} from "../../../config/brand";
 import { listingMetadata } from "../../../features/blog/metadata";
 import { InstitutionalPage } from "../../../components/editorial/InstitutionalPage";
-export const metadata = listingMetadata("Política editorial e metodologia", "Critérios editoriais do Portal Tech: fontes, revisão humana, métodos e limites das recomendações.", "/metodologia/");
+export const metadata = listingMetadata("Política editorial e metodologia", `Critérios editoriais do ${brand.name}: fontes, revisão humana, métodos e limites das recomendações.`, "/metodologia/");
 export default function Page() {
   return (
     <InstitutionalPage

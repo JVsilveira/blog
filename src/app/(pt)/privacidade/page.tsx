@@ -1,6 +1,7 @@
+import {brand} from "../../../config/brand";
 import { listingMetadata } from "../../../features/blog/metadata";
 import { InstitutionalPage } from "../../../components/editorial/InstitutionalPage";
-export const metadata = listingMetadata("Privacidade", "Como funcionam a busca local, os orçamentos no navegador e a privacidade nesta versão do Portal Tech.", "/privacidade/");
+export const metadata = listingMetadata("Privacidade", `Como funcionam a busca local, os orçamentos no navegador e a privacidade nesta versão do ${brand.name}.`, "/privacidade/");
 export default function Page() {
   return (
     <InstitutionalPage

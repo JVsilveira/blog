@@ -1,4 +1,4 @@
-# Design system do Portal Tech
+# Design system do SilfonTech
 
 Base implementada em 22/10/2026; paleta clara adotada na mesma data após autorização do proprietário. Referência visual: [Ghost Source](https://github.com/TryGhost/Source), especialmente [variáveis, layout e controles](https://github.com/TryGhost/Source/blob/main/assets/css/screen.css). O Source é um tema Ghost/Handlebars; este projeto mantém Next.js, CSS Modules e componentes nativos existentes.
 
@@ -14,7 +14,7 @@ A paleta clara foi escolhida como direção editorial para páginas de leitura, 
 
 [Smashing Magazine](https://www.smashingmagazine.com/), consultada em 22/10/2026, complementa o Source com navegação cromática forte, acesso por assuntos, hierarquia de artigos e contraste entre títulos sem serifa e texto editorial serifado. A composição foi analisada no navegador; nenhum texto, ilustração, fotografia, fonte proprietária ou código da referência foi importado.
 
-Adaptação no Portal Tech:
+Adaptação no SilfonTech:
 
 - Cabeçalho azul #174A93 com texto e foco brancos; hover #123D7A. Os tokens `--header-background`, `--header-text`, `--header-hover` e `--focus-inverse` isolam a superfície inversa dos controles do dialog, que continua claro.
 - Os dois caminhos existentes recebem superfícies azuladas e áreas clicáveis amplas, mantendo rótulos e destinos.
@@ -22,7 +22,7 @@ Adaptação no Portal Tech:
 - Categorias reais da listagem recebem etiquetas clicáveis com quebra de linha. Sem catálogo publicado, não são inventadas categorias para preencher a interface.
 - Listagem de artigos mantém divisórias e dá mais hierarquia ao primeiro título. Texto do corpo do artigo usa `--font-editorial` (Georgia local, com fallback Times New Roman/serif); títulos continuam na fonte de sistema e código permanece monoespaçado.
 
-A sobriedade, o respiro e a base clara do Source permanecem. A personalidade entra na navegação e na organização da leitura. Os componentes e a disponibilidade de conteúdo continuam definidos pelo Portal Tech.
+A sobriedade, o respiro e a base clara do Source permanecem. A personalidade entra na navegação e na organização da leitura. Os componentes e a disponibilidade de conteúdo continuam definidos pelo SilfonTech.
 
 ## Fundação e uso
 
@@ -78,3 +78,8 @@ O tema claro é o padrão; não há seletor de tema nem troca automática por pr
 - Validar fixtures e páginas de detalhes separadamente quando o catálogo real estiver vazio.
 
 Resultados desta implementação e limitações estão em `docs/progresso.md`. Isso é uma fundação de design; não equivale a certificação WCAG ou aprovação editorial.
+
+
+## Identidade SilfonTech — 23/10/2026
+
+Marca definida pelo proprietário. Nome, slug e desenho do monograma ST ficam em `src/config/brand.ts`, consumidos pelo site e pelo painel. Tema claro com azul preservado. Ícones públicos/editoriais usam ST em branco sobre #1757B8. Capa de compartilhamento 1200×630 em `public/og-blog.png`, com fonte vetorial editável `public/og-blog.svg`, reutilizando a descrição editorial e os tópicos já existentes. Domínio permanece pendente; não criar origem fictícia a partir do nome.

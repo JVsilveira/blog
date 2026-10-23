@@ -130,3 +130,10 @@ Sem novas dependências. Métricas strict com Zod existente; no-op e debug exclu
 ## 22/10/2026 — Validação 10A e preview local
 
 10A limitada ao núcleo; 10B não indicada. Acrescentados auditor offline de HTML com Python stdlib e preview somente loopback, sem nova dependência/lockfile. Preview usa 404 do projeto e MIME real, sem listagem de diretório; não é host de produção. Termos corrigidos para mencionar uso local de orçamentos já implementado, mantendo rascunho. Git não reconhecido permanece bloqueador operacional, sem inicialização automática. Instruções portáveis e alternativa Nginx em docs/lancamento-10a.md; provedor específico depende de escolha/termos reais. Nenhuma política comercial ou aprovação editorial é inferida. Fontes oficiais atuais Next/Nginx/MDN consultadas e vinculadas no relatório. Lighthouse não instalado; nenhum dado de dependências enviado a registry para auditoria remota.
+
+
+## 23/10/2026 — Identidade definitiva SilfonTech
+
+Proprietário definiu SilfonTech como nome do blog e solicitou adaptação de toda a estrutura. Esta decisão substitui as referências históricas à marca provisória Portal Tech. Identidade centralizada em src/config/brand.ts; site/painel, metadados, ícones, capa, pacote npm, planos e documentação operacional atualizados. Registros anteriores deste documento e do progresso preservam a cronologia. Repositório GitHub continua JVsilveira/blog e o diretório local permanece no caminho autorizado existente; não foi presumido domínio, registro de marca ou conta externa nova.
+
+Novos salvamentos locais usam namespaces silfontech; leitura das chaves anteriores mantém orçamentos, seleções PC e idioma sem gravação automática. Exclusão explícita de orçamentos/seleção remove ambas as chaves para impedir retorno do legado. Não altera versão/formato dos documentos, permissões, OAuth, sessões, referências Icecat ou links de afiliado.

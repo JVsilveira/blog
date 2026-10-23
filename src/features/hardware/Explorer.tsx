@@ -7,13 +7,14 @@ import {phoneRankingSchema,type PhoneRanking} from '../../domain/hardware/bestse
 import {storeLinksSchema,type StoreLink} from '../../domain/hardware/retailers';
 import {hardwareLocale,hardwareText} from './i18n';
 import {localeTags,type Locale} from '../publication/i18n';
+import {readLanguagePreference,writeLanguagePreference,languagePreferenceEvent} from '../publication/language-preference';
 import {HardwareComparator} from './Comparator';
-function subscribeLanguage(listener:()=>void){for(const event of ['storage','popstate','languagechange','portal-language'])window.addEventListener(event,listener);return()=>{for(const event of ['storage','popstate','languagechange','portal-language'])window.removeEventListener(event,listener);};}
-function readLanguage(){let saved:string|null=null;try{saved=localStorage.getItem('portal-language');}catch{}return hardwareLocale(new URL(location.href).searchParams.get('lang')??saved,navigator.languages,location.pathname);}
+function subscribeLanguage(listener:()=>void){for(const event of ['storage','popstate','languagechange',languagePreferenceEvent])window.addEventListener(event,listener);return()=>{for(const event of ['storage','popstate','languagechange',languagePreferenceEvent])window.removeEventListener(event,listener);};}
+function readLanguage(){let saved:string|null=null;try{saved=readLanguagePreference(localStorage);}catch{}return hardwareLocale(new URL(location.href).searchParams.get('lang')??saved,navigator.languages,location.pathname);}
 export function HardwareExplorer({items,kind,kindLabel,path}:{items:Hardware[];kind:HardwareKind;kindLabel:string;path:string}){
  const locale=useSyncExternalStore(subscribeLanguage,readLanguage,()=> 'pt' as Locale);
  const t=(text:string)=>hardwareText(text,locale);
- function chooseLocale(value:Locale){try{localStorage.setItem('portal-language',value);}catch{}const url=new URL(location.href);url.searchParams.set('lang',value);history.replaceState(null,'',url);window.dispatchEvent(new Event('portal-language'));}
+ function chooseLocale(value:Locale){try{writeLanguagePreference(localStorage,value);}catch{}const url=new URL(location.href);url.searchParams.set('lang',value);history.replaceState(null,'',url);window.dispatchEvent(new Event(languagePreferenceEvent));}
  const [ranking,setRanking]=useState<PhoneRanking|null>(null);
  useEffect(()=>{if(kind!=='phone')return;const controller=new AbortController();const refresh=()=>{void fetch('/data/hardware/bestsellers.json',{cache:'no-store',signal:controller.signal}).then(async r=>r.ok?phoneRankingSchema.parse(await r.json()):null).then(value=>{if(!controller.signal.aborted)setRanking(value);}).catch(()=>{});};refresh();const timer=setInterval(refresh,60000);return()=>{controller.abort();clearInterval(timer);};},[kind]);
  const [links,setLinks]=useState<StoreLink[]>([]);

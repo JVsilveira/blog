@@ -1,7 +1,7 @@
 # 00 — Diretrizes gerais do produto e regras para IA
 
 ## Objetivo e público
-Construir uma autoridade editorial independente em português do Brasil para pessoas que precisam resolver problemas de tecnologia e comprar melhor. Público principal: consumidores, estudantes e pessoas em home office. Público secundário: técnicos e prestadores de TI, atendidos em seção própria. O proprietário é João; informações profissionais específicas, foto e contato só entram se fornecidos ou confirmados. A arquitetura deve permitir substituir a marca provisória em um arquivo.
+Construir uma autoridade editorial independente em português do Brasil para pessoas que precisam resolver problemas de tecnologia e comprar melhor. Público principal: consumidores, estudantes e pessoas em home office. Público secundário: técnicos e prestadores de TI, atendidos em seção própria. O proprietário é João; informações profissionais específicas, foto e contato só entram se fornecidos ou confirmados. A marca SilfonTech deve permanecer centralizada em src/config/brand.ts, compartilhada pelo site e pelo painel.
 
 Proposta: “Entenda o problema, compare suas opções e escolha com segurança”. Impressão desejada: publicação especializada com ferramentas úteis, visual marcante e confortável. Não um agregador automático de notícias, marketplace próprio ou loja que recebe pagamentos.
 

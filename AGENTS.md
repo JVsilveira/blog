@@ -4,7 +4,7 @@ Leia `planos/00-diretrizes-gerais.md` antes de qualquer alteração e `planos/01
 
 - Objetivo ampliado em 22/10/2026: portal de notícias, opinião e blog de João sobre política, esporte, economia, tecnologia e outros temas, com edições pt/en/es; preservar guias e ferramentas técnicas. Direção em docs/portal-editorial-internacional.md. Receita por afiliados e, posteriormente, AdSense. Sem promessa de receita.
 - React + TypeScript strict. Next.js com geração estática como decisão inicial; não usar serviços pagos ou banco remoto no MVP público. Área editorial separada com Google OAuth autorizada em 22/10/2026; arquitetura e operação em docs/editorial/painel-google-oauth.md. Não adicionar login aos leitores.
-- Nome interno: Portal Tech. Marca e domínio definitivos estão pendentes; manter em configuração única e não inventar marca registrada, equipe ou depoimentos.
+- Marca definida pelo proprietário em 23/10/2026: SilfonTech. O domínio continua pendente; manter em configuração única e não inventar marca registrada, equipe ou depoimentos.
 - Notícias e opinião compartilham a seção Notícias (ajuste de 23/10/2026); destaque por ordem editorial e filtro por categorias reais. Evitar apresentação enumerando temas na abertura. Blog/guias preservados.
 - Traduções exigem conteúdo completo e revisão por idioma; não publicar versões em draft ou desatualizadas, nem apresentar original português como tradução. Preferência inicial pelo navegador, sem geolocalização por IP; manual disponível.
 - Tema claro com azul (direção autorizada em 22/10/2026; tokens em src/styles/tokens.css), contraste legível, navegação acessível por teclado e funcionamento móvel. Não produzir um dashboard como página inicial.

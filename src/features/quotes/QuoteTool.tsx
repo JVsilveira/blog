@@ -13,7 +13,7 @@ import {
   totals,
   type Quote,
 } from "../../domain/quotes/model";
-import { readQuotes, writeQuotes, withDocument, STORAGE_KEY } from "./storage";
+import { readQuotes, writeQuotes, withDocument, clearQuotes } from "./storage";
 import styles from "./quotes.module.css";
 const termLabels = {
   deadline: "Prazo estimado",
@@ -685,7 +685,7 @@ export function QuoteTool() {
                 onClick={() =>
                   replace(() =>
                     attempt(() => {
-                      localStorage.removeItem(STORAGE_KEY);
+                      clearQuotes(localStorage);
                       setSaved([]);
                       setMessage(
                         "Documentos locais apagados. O formulário em memória foi mantido.",

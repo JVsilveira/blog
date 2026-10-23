@@ -1,6 +1,7 @@
+import {brand} from "../../../config/brand";
 import { listingMetadata } from "../../../features/blog/metadata";
 import { InstitutionalPage } from "../../../components/editorial/InstitutionalPage";
-export const metadata = listingMetadata("Afiliados e publicidade", "Política de transparência do Portal Tech sobre vínculos comerciais, afiliados e publicidade.", "/afiliados/");
+export const metadata = listingMetadata("Afiliados e publicidade", `Política de transparência do ${brand.name} sobre vínculos comerciais, afiliados e publicidade.`, "/afiliados/");
 export default function Page() {
   return (
     <InstitutionalPage

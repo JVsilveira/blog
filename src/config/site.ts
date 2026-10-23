@@ -1,6 +1,7 @@
 import { seoConfiguration } from "./seo";
+import {brand} from './brand';
 export const site = {
-  name: 'Portal Tech', author: 'João',
+  name: brand.name, author: 'João',
   ...seoConfiguration(
     process.env.NEXT_PUBLIC_SITE_URL,
     process.env.NEXT_PUBLIC_SITE_INDEXING,

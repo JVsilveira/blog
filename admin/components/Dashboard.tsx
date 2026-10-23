@@ -1,4 +1,5 @@
 "use client";
+import {brand} from "../../src/config/brand";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Markdown from "react-markdown";
@@ -253,7 +254,7 @@ export function Dashboard({
     <>
       <header className="admin-header">
         <strong className="admin-brand">
-          Portal Tech <span>Área editorial</span>
+          {brand.name} <span>Área editorial</span>
         </strong>
         <div className="admin-account">
           <AccountProfile email={email} name={name} picture={picture} />

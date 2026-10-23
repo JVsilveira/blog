@@ -27,7 +27,7 @@ Após revisão humana: validar catálogo, motor e export, repetir a jornada móv
 
 ## Persistência, URL e recuperação
 
-Estado em memória; salvar, carregar e apagar somente por ação explícita. Chave local `portal-tech:pc:v1`. JSON estrito `{schemaVersion:1,components:{cpu,motherboard,ram,gpu,storage,psu,case,cooler}}`, cada slot ID ou null. Limite 2.400 caracteres JSON / 7.200 codificados; `#build=` contém JSON URI-encoded (fragmento não enviado ao host). Sem nomes de clientes, preços ou metadados pessoais. Versão 1 é inicial; versões diferentes são recusadas até existir migração explícita documentada. Não há migração presumida.
+Estado em memória; salvar, carregar e apagar somente por ação explícita. Chave local `silfontech:pc:v1` (leitura compatível com `portal-tech:pc:v1`). JSON estrito `{schemaVersion:1,components:{cpu,motherboard,ram,gpu,storage,psu,case,cooler}}`, cada slot ID ou null. Limite 2.400 caracteres JSON / 7.200 codificados; `#build=` contém JSON URI-encoded (fragmento não enviado ao host). Sem nomes de clientes, preços ou metadados pessoais. Versão 1 é inicial; versões diferentes são recusadas até existir migração explícita documentada. Não há migração presumida.
 
 Abrir link não substitui seleção automaticamente: clicar “Carregar seleção do link”. IDs ausentes, categoria errada, conteúdo corrompido, campos extras e versão futura geram mensagem recuperável, preservando seleção atual. Escolher manualmente outra peça corrige o conjunto; não há substituição silenciosa. LocalStorage bloqueado/sem espaço apresenta erro e mantém memória. Limpar seleção não apaga salvamento; apagar salvamento tem ação própria.
 

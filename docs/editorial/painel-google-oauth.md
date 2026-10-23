@@ -16,7 +16,7 @@ Não há migração de banco nem custo de serviço contratado por esta entrega. 
 2. Cadastre exatamente a URI de redirecionamento: `https://SEU-DOMINIO-EDITORIAL/auth/callback`. Em desenvolvimento, pode usar `http://localhost:4180/auth/callback`. Hostname, esquema e porta precisam corresponder a EDITORIAL_ORIGIN; não misture localhost e 127.0.0.1.
 3. Copie `admin/.env.example` para `admin/.env.local` **somente na máquina/servidor**, ou configure as variáveis no gerenciador de segredos do host:
    - `EDITORIAL_ORIGIN`: origem do painel, HTTPS em acesso remoto; HTTP apenas em localhost/127.0.0.1.
-   - `EDITORIAL_ROOT`: caminho absoluto do checkout persistente do Portal Tech, que contém src/data, src/content, docs/editorial e os scripts/dependências de build.
+   - `EDITORIAL_ROOT`: caminho absoluto do checkout persistente do SilfonTech, que contém src/data, src/content, docs/editorial e os scripts/dependências de build.
    - `EDITORIAL_ADMIN_EMAILS`: e-mails Google autorizados, separados por vírgula. Vazio bloqueia o login. Aceitar uma conta Google não concede acesso por si só.
    - `GOOGLE_CLIENT_ID` e `GOOGLE_CLIENT_SECRET`: cliente OAuth do painel. Não usar NEXT_PUBLIC_, não enviar pelo chat, não registrar em logs e não commitar.
 4. O login só é habilitado quando a configuração está completa. O projeto não fornece conta, segredo ou modo de bypass. O botão desabilitado informa configuração pendente honestamente.

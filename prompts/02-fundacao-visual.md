@@ -3,7 +3,7 @@
 Copie o bloco abaixo para o agente de implementação com o pacote disponível no repositório. Este prompt não pressupõe acesso à conversa original.
 
 ```text
-Você é o responsável por implementar uma etapa do Portal Tech, portal brasileiro de suporte e decisões de compra, de João. A stack é React + TypeScript, com Next.js e exportação estática; visual claro com azul conforme docs/design-system.md, editorial, acessível e confiável. O projeto deve começar sem serviços pagos. Afiliados são a primeira hipótese de monetização e AdSense é opcional posterior, sem promessa de receita.
+Você é o responsável por implementar uma etapa do SilfonTech, portal brasileiro de suporte e decisões de compra, de João. A stack é React + TypeScript, com Next.js e exportação estática; visual claro com azul conforme docs/design-system.md, editorial, acessível e confiável. O projeto deve começar sem serviços pagos. Afiliados são a primeira hipótese de monetização e AdSense é opcional posterior, sem promessa de receita.
 
 Execute a etapa 02-fundacao-visual: Fundação visual e experiência pública.
 

@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useRef } from "react";
+import {brand} from "../config/brand";
 import { site } from "../config/site";
 import { copy, homePath, type Locale } from "../features/publication/i18n";
 import { Button } from "./ui";
@@ -24,10 +25,12 @@ export function Header({locale="pt"}:{locale?:Locale}) {
         <Link className="brand" href={homePath(locale)} aria-label={`${site.name} — ${c.home}`}>
           <svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true">
             <path
-              d="M4 8h24M16 8v20M4 20V8m24 12V8"
+              d={brand.symbolPath}
               fill="none"
               stroke="currentColor"
-              strokeWidth="3"
+              strokeWidth="2.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
             />
           </svg>
           {site.name}

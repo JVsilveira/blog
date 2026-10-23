@@ -10,8 +10,8 @@ function alternates(paths:Partial<Record<Locale,string>>) {
  return Object.fromEntries(Object.entries(paths).map(([key,path])=>[localeTags[key as Locale],new URL(path,site.origin!).href]));
 }
 export function editionMetadata(locale:Locale):Metadata {
- const c=copy[locale];const metadata=listingMetadata(c.heading,c.intro,homePath(locale));
- return {...metadata,alternates:{...metadata.alternates,languages:site.origin?{...alternates(homeLanguages),'x-default':new URL('/',site.origin).href}:undefined},openGraph:{...metadata.openGraph,locale:locale==='pt'?'pt_BR':locale==='en'?'en_US':'es_ES'}};
+ const c=copy[locale],title=`${site.name} | ${c.heading}`;const metadata=listingMetadata(title,c.intro,homePath(locale));
+ return {...metadata,title:{absolute:title},alternates:{...metadata.alternates,languages:site.origin?{...alternates(homeLanguages),'x-default':new URL('/',site.origin).href}:undefined},openGraph:{...metadata.openGraph,locale:locale==='pt'?'pt_BR':locale==='en'?'en_US':'es_ES'}};
 }
 export async function collectionMetadata(locale:Locale,title:string,path:string,kind?:PublicationKind,section?:string):Promise<Metadata> {
  const articles=(await loadPublicContent()).articles().filter(a=>matchesPublicationKind(a,kind)&&(!section||a.category.toLocaleLowerCase('pt-BR')===copy.pt[section as keyof typeof copy.pt]?.toLocaleLowerCase('pt-BR'))&&localizeArticle(a,locale));

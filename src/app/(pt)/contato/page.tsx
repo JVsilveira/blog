@@ -1,6 +1,7 @@
+import {brand} from "../../../config/brand";
 import { listingMetadata } from "../../../features/blog/metadata";
 import { InstitutionalPage } from "../../../components/editorial/InstitutionalPage";
-export const metadata = listingMetadata("Contato", "Disponibilidade do canal de contato e orientações sobre dados pessoais no Portal Tech.", "/contato/");
+export const metadata = listingMetadata("Contato", `Disponibilidade do canal de contato e orientações sobre dados pessoais no ${brand.name}.`, "/contato/");
 export default function Page() {
   return (
     <InstitutionalPage
@@ -8,7 +9,7 @@ export default function Page() {
       subtitle={"Canal público ainda não disponível."}
     >
       <p>
-        O canal de contato do Portal Tech aguarda definição e autorização de
+        O canal de contato do {brand.name} aguarda definição e autorização de
         João.
       </p>
       <p>

@@ -3,7 +3,7 @@ import { useState } from 'react';
 import type { Product, SourceReference, AffiliateOffer } from '../../domain/schemas';
 import { slots, type Selection } from '../../domain/pc/contracts';
 import { evaluateBuild, statusLabels } from '../../domain/pc/evaluate';
-import { emptySelection, slotNames, storageKey, serializeSelection, importSelection, encodeSelection, decodeSelection, selectedComplete } from './state';
+import { emptySelection, slotNames, storageKey, readStoredSelection, clearStoredSelection, serializeSelection, importSelection, encodeSelection, decodeSelection, selectedComplete } from './state';
 import { presentOffer } from '../../domain/offers';
 import { OfferLink } from '../recommendations/OfferLink';
 import { analytics } from '../../lib/analytics';
@@ -22,7 +22,7 @@ export function Builder({products,sources,offers=[],affiliates=false,today}:{pro
     if(parsed.ok){apply(parsed.selection);setNotice('Seleção carregada e reavaliada.');}else setNotice(parsed.message+' A seleção atual foi preservada.');
   }
   function local(action:'save'|'load'|'delete'){
-    try{if(action==='load')load(localStorage.getItem(storageKey));else if(action==='save'){localStorage.setItem(storageKey,serializeSelection(selection));setNotice('Salvo somente neste navegador.');}else{localStorage.removeItem(storageKey);setNotice('Salvamento local apagado.');}}
+    try{if(action==='load')load(readStoredSelection(localStorage));else if(action==='save'){localStorage.setItem(storageKey,serializeSelection(selection));setNotice('Salvo somente neste navegador.');}else{clearStoredSelection(localStorage);setNotice('Salvamento local apagado.');}}
     catch{setNotice('Armazenamento local indisponível ou sem espaço. A seleção continua em memória.');}
   }
   return <div className="pc-builder"><section aria-label="Seleção de componentes"><p>Selecione e revise qualquer peça. Trocas reavaliam o conjunto e preservam os outros slots. GPU e cooler separado são opcionais, sujeitos às regras de vídeo e refrigeração.</p><label><input type="checkbox" checked={hide} onChange={e=>setHide(e.target.checked)}/> Ocultar opções incompatíveis (preserva a peça atual)</label>{slots.map(slot=><div className="pc-slot" key={slot}><label htmlFor={`pc-${slot}`}>{slotNames[slot]}</label><select id={`pc-${slot}`} value={selection.components[slot]??''} onChange={e=>{analytics.track({name:'pc_builder_slot',slot});apply({...selection,components:{...selection.components,[slot]:e.target.value||null}});}}><option value="">{slot==='gpu'||slot==='cooler'?'Sem peça separada':'Selecione uma peça'}</option>{products.filter(p=>p.category===slot).map(p=>{

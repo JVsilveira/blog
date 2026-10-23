@@ -1,7 +1,11 @@
+import {brand} from '../../config/brand';
 import { selectionSchema, slots, type Selection, type Slot } from '../../domain/pc/contracts';
 import { resolveSelection } from '../../domain/pc/evaluate';
 import type { Product } from '../../domain/schemas';
-export const storageKey='portal-tech:pc:v1';
+export const storageKey=`${brand.slug}:pc:v1`;
+export const legacyStorageKey='portal-tech:pc:v1';
+export const readStoredSelection=(storage:Pick<Storage,'getItem'>)=>storage.getItem(storageKey)??storage.getItem(legacyStorageKey);
+export function clearStoredSelection(storage:Pick<Storage,'removeItem'>){storage.removeItem(legacyStorageKey);storage.removeItem(storageKey);}
 export const maxSelectionLength=2400;
 export const slotNames:Record<Slot,string>={cpu:'Processador',motherboard:'Placa-mãe',ram:'Memória RAM',gpu:'Placa de vídeo',storage:'Armazenamento',psu:'Fonte',case:'Gabinete',cooler:'Cooler'};
 export const emptySelection=():Selection=>({schemaVersion:1,components:{cpu:null,motherboard:null,ram:null,gpu:null,storage:null,psu:null,case:null,cooler:null}});

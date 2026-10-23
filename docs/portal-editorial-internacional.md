@@ -1,6 +1,6 @@
 # Notícias, opinião e edições internacionais
 
-Escopo autorizado em 22/10/2026: ampliar o Portal Tech para notícias e opinião sobre política, esporte, economia, tecnologia e outros temas, com português, inglês e espanhol. A marca continua provisória em src/config/site.ts. Não foram criadas notícias ou opiniões reais; rascunhos existentes continuam privados.
+Escopo autorizado em 22/10/2026: ampliar o SilfonTech para notícias e opinião sobre política, esporte, economia, tecnologia e outros temas, com português, inglês e espanhol. A marca SilfonTech está centralizada em src/config/brand.ts e consumida por src/config/site.ts. Não foram criadas notícias ou opiniões reais; rascunhos existentes continuam privados.
 
 ## Publicação e editorias
 
