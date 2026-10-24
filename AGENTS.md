@@ -21,3 +21,4 @@ Leia `planos/00-diretrizes-gerais.md` antes de qualquer alteração e `planos/01
 - Executar somente a etapa pedida. Preservar trabalho existente e documentar decisões, testes, limitações e dependências em `docs/progresso.md`.
 - Completar tarefas locais reversíveis sem pedir confirmação a cada escolha. Publicação em produção, contratação, custos e envio a terceiros ficam fora dos prompts locais.
 - Não declarar testes ou verificações que não foram executados. Não deixar botões falsos, links # ou funcionalidades anunciadas como prontas sem implementação.
+- Administração online autorizada em 23/10/2026: cloud-admin/ no Workers com D1 para artigos/autores/fontes, sem plano pago; ADR em planos/01-arquitetura-e-dados.md e operação em docs/editorial/painel-cloudflare.md. Pages importa snapshot por canal privado no build; rascunhos permanecem privados. Icecat/Mercado Livre continuam no Node local nesta etapa.

@@ -97,3 +97,7 @@ Referências oficiais consultadas em 22/10/2026: [preços e nível gratuito](htt
 ### Notícias, opinião e traduções
 
 Tipo de publicação, editorias gerais e versões internacionais foram adicionados em 22/10/2026. [Fluxo e revisão de traduções](../portal-editorial-internacional.md). A IA de títulos considera o tipo/editoria e não deve transformar opinião em fato; publicação e traduções seguem revisão humana.
+
+### Implantação online (23/10/2026)
+
+A administração editorial também está disponível no Cloudflare Workers/D1, mantendo o painel local. Endereço, callback Google e operação em [painel-cloudflare](painel-cloudflare.md). A arquitetura Node/checkout descrita acima passa a se referir à operação local; produção editorial usa banco e build autenticado. Não copiar .env para assets públicos.

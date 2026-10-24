@@ -36,3 +36,7 @@ Se o log mostrar `npx opennextjs-cloudflare build` e falhar na geração do bund
 ## Deploy público confirmado e falha do DNS local (23/10/2026)
 
 Deploy informado: https://5dbda95d.blog-16e.pages.dev; alias de produção https://blog-16e.pages.dev. DNS da rede consultada (45.167.189.15) devolveu 127.0.0.1 para os dois hosts, causando conexão recusada. DNS público Google por HTTPS devolveu 172.66.44.199 e 172.66.47.57. Verificação com curl --resolve, mantendo hostname/SNI e validação TLS, confirmou em ambos os hosts: /, /noticias/, /celulares/comparar/ e /robots.txt HTTP 200; rota inexistente HTTP 404. HTML apresenta marca SilfonTech e noindex; ainda não habilitado SEO público. Evidência aponta resolução DNS local incorreta/filtrada, sem demonstrar qual equipamento ou provedor a causou. Não foi alterado DNS do computador/roteador. Orientar teste em rede móvel e resolvedor seguro do navegador antes de alterar publicação ou domínio.
+
+## Administração online — atualização de 23/10/2026
+
+Painel editorial agora tem Worker e D1 separados do Pages estático, sem contratação de plano pago. Postagens/autores/fontes persistem online e o build de produção importa snapshot autenticado. Configuração, callback Google, publicação e limites em [painel-cloudflare](editorial/painel-cloudflare.md). O painel Node local permanece para sincronização Icecat e Mercado Livre.

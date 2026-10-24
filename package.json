@@ -32,7 +32,11 @@
     "admin:start": "next start admin --hostname 127.0.0.1 --port 4180",
     "admin:typecheck": "tsc -p admin/tsconfig.json --noEmit",
     "test:admin": "vitest run tests/admin-*.test.ts",
-    "seo:check": "node --import tsx scripts/check-seo.ts"
+    "seo:check": "node --import tsx scripts/check-seo.ts",
+    "cloud-admin:build": "node --import tsx scripts/build-cloud-admin.ts",
+    "cloud-admin:dev": "npm run cloud-admin:build && wrangler dev --config cloud-admin/wrangler.jsonc",
+    "cloud-admin:deploy": "npm run cloud-admin:build && wrangler deploy --config cloud-admin/wrangler.jsonc",
+    "test:cloud-admin": "vitest run tests/cloud-admin.test.ts"
   },
   "dependencies": {
     "google-auth-library": "11.3.1",
@@ -47,11 +51,13 @@
     "@types/node": "26.6.5",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
+    "esbuild": "0.28.2",
     "eslint": "9.39.5",
     "eslint-config-next": "16.4.2",
     "tsx": "4.23.15",
     "typescript": "6.0.3",
-    "vitest": "5.0.5"
+    "vitest": "5.0.5",
+    "wrangler": "4.152.0"
   },
   "type": "module"
 }

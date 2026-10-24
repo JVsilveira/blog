@@ -57,7 +57,9 @@ export function Dashboard({
   titleAI,
   initialTab='articles',
   mercadoFeedback,
+  online=false,
 }: {
+  online?:boolean;
   initialTab?:'articles'|'hardware';
   mercadoFeedback?:'connected'|'error';
   email: string;
@@ -303,7 +305,8 @@ export function Dashboard({
             </section>
           ) : (
             <>
-              {tab === "hardware" && <HardwareManager mercadoFeedback={mercadoFeedback} csrf={csrf} building={building} buildMessage={job?.message??""} onGenerate={generate} onDirtyChange={setDirty}/>}
+              {tab === "hardware" && online && <section><h1>Produtos e comparadores</h1><p>A sincronização do catálogo continua no processo local. As postagens, fontes e autores podem ser administrados por aqui.</p></section>}
+              {tab === "hardware" && !online && <HardwareManager mercadoFeedback={mercadoFeedback} csrf={csrf} building={building} buildMessage={job?.message??""} onGenerate={generate} onDirtyChange={setDirty}/>}
               {tab === "articles" && (
                 <section>
                   <div className="page-heading">
@@ -371,7 +374,7 @@ export function Dashboard({
                       >
                         {building
                           ? "Gerando versão…"
-                          : "Gerar versão do portal"}
+                          : online ? "Publicar alterações no site" : "Gerar versão do portal"}
                       </button>
                     </div>
                     {job && (

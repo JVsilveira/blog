@@ -137,3 +137,7 @@ Sem novas dependências. Métricas strict com Zod existente; no-op e debug exclu
 Proprietário definiu SilfonTech como nome do blog e solicitou adaptação de toda a estrutura. Esta decisão substitui as referências históricas à marca provisória Portal Tech. Identidade centralizada em src/config/brand.ts; site/painel, metadados, ícones, capa, pacote npm, planos e documentação operacional atualizados. Registros anteriores deste documento e do progresso preservam a cronologia. Repositório GitHub continua JVsilveira/blog e o diretório local permanece no caminho autorizado existente; não foi presumido domínio, registro de marca ou conta externa nova.
 
 Novos salvamentos locais usam namespaces silfontech; leitura das chaves anteriores mantém orçamentos, seleções PC e idioma sem gravação automática. Exclusão explícita de orçamentos/seleção remove ambas as chaves para impedir retorno do legado. Não altera versão/formato dos documentos, permissões, OAuth, sessões, referências Icecat ou links de afiliado.
+
+## 23/10/2026 — Painel editorial gratuito no Cloudflare
+
+Autorizado Workers + D1 para a administração online, mantendo o site público estático no Pages. Fonte de produção dos artigos passa ao D1; exportação de build autenticada e publicação via deploy hook privado. Sem login de leitores ou contratação de plano pago. OAuth/validações e UI compartilhados com o painel Node, que permanece para catálogo Icecat/Mercado Livre. Detalhes no ADR do plano 01 e docs/editorial/painel-cloudflare.md.

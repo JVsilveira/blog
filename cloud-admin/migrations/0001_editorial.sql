@@ -1,0 +1,9 @@
+CREATE TABLE IF NOT EXISTS editorial_files(path TEXT PRIMARY KEY, contents TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS editorial_state(id INTEGER PRIMARY KEY CHECK(id=1), revision TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS editorial_history(id INTEGER PRIMARY KEY AUTOINCREMENT, path TEXT NOT NULL, contents TEXT NOT NULL, revision TEXT NOT NULL, created_at INTEGER NOT NULL, actor TEXT NOT NULL);
+CREATE INDEX IF NOT EXISTS history_path_id ON editorial_history(path,id);
+CREATE TABLE IF NOT EXISTS auth_records(key TEXT PRIMARY KEY, kind TEXT NOT NULL, value TEXT NOT NULL, expires INTEGER NOT NULL);
+CREATE INDEX IF NOT EXISTS auth_expiry ON auth_records(expires);
+CREATE TABLE IF NOT EXISTS settings(key TEXT PRIMARY KEY, value TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS rate_limits(key TEXT PRIMARY KEY, count INTEGER NOT NULL, expires INTEGER NOT NULL);
+CREATE INDEX IF NOT EXISTS rate_expiry ON rate_limits(expires);

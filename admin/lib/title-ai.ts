@@ -3,10 +3,10 @@ import { z } from 'zod';
 import { AdminError } from './config';
 
 const model = 'gemini-3.5-flash-lite';
-export function titleAIStatus() {
-  if (process.env.EDITORIAL_AI_ENABLED !== 'true')
+export function titleAIStatus(env:Record<string,string|undefined>=process.env) {
+  if (env.EDITORIAL_AI_ENABLED !== 'true')
     return {enabled:false, reason:'IA desativada na configuração do painel.'};
-  if (!process.env.GEMINI_API_KEY?.trim())
+  if (!env.GEMINI_API_KEY?.trim())
     return {enabled:false, reason:'IA indisponível: configure a chave GEMINI_API_KEY no servidor para usar o Gemini.'};
   return {enabled:true, reason:''};
 }
@@ -24,9 +24,9 @@ const providerOutput = z.object({
 });
 const normalize = (text:string) => text.normalize('NFKC').toLocaleLowerCase('pt-BR').replace(/[^\p{L}\p{N}]/gu,'');
 let generating = false;
-export async function suggestTitle(input:unknown, signal?:AbortSignal) {
+export async function suggestTitle(input:unknown, signal?:AbortSignal, env:Record<string,string|undefined>=process.env) {
   // Este gate antecede qualquer chamada externa, inclusive se uma chave existir no ambiente.
-  const status = titleAIStatus();
+  const status = titleAIStatus(env);
   if (!status.enabled) throw new AdminError(status.reason,503);
   const data = titleInput.parse(input);
   if (signal?.aborted) throw new AdminError('Geração cancelada.',499);
@@ -37,7 +37,7 @@ export async function suggestTitle(input:unknown, signal?:AbortSignal) {
     // Uma chamada por clique; nenhuma repetição automática que possa gerar cobrança extra.
     const response = await fetch('https://generativelanguage.googleapis.com/v1beta/interactions', {
       method:'POST', redirect:'error',
-      headers:{'Content-Type':'application/json','x-goog-api-key':process.env.GEMINI_API_KEY!.trim()},
+      headers:{'Content-Type':'application/json','x-goog-api-key':env.GEMINI_API_KEY!.trim()},
       signal:AbortSignal.any([AbortSignal.timeout(30000),...(signal ? [signal] : [])]),
       body:JSON.stringify({
         model, store:false,

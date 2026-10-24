@@ -111,3 +111,7 @@ Para preparar indexação, metadados e descoberta em buscas com IA, consulte [SE
 Notícias, opinião e idiomas pt/en/es: [operação editorial internacional](docs/portal-editorial-internacional.md).
 
 Comparadores, fontes e importação: [Ferramentas TI e APIs](docs/comparadores-e-fontes.md).
+
+### Administração online
+
+Painel editorial: https://silfontech-admin.devsilveira.workers.dev/login — acesso Google restrito às contas autorizadas. Persistência em Cloudflare D1 e publicação no Pages pelo próprio painel. Operação e callback em [docs/editorial/painel-cloudflare.md](docs/editorial/painel-cloudflare.md). O painel Node local continua disponível para catálogo Icecat e Mercado Livre.
