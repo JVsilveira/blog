@@ -14,7 +14,7 @@ async function limitedJSON(request:Request){
  while(true){const part=await reader.read();if(part.done)break;size+=part.value.length;if(size>512*1024){await reader.cancel();throw new AdminError('Conteúdo maior que 512 KB.',413);}chunks.push(part.value);}
  try{return JSON.parse(Buffer.concat(chunks).toString('utf8')) as unknown;}catch{throw new AdminError('JSON inválido.');}
 }
-function html(content:string){return new Response('<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Área editorial | SilfonTech</title><link rel="icon" href="/icon.svg"><link rel="stylesheet" href="/assets/main.css"></head><body>'+content+'</body></html>',{headers:{...security,'Content-Type':'text/html; charset=utf-8'}});}
+function html(content:string){return new Response('<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Área editorial | SilfonTech</title><link rel="icon" href="/icon.svg"><link rel="stylesheet" href="/assets/main.css"></head><body>'+content+'</body></html>',{headers:{...security,'Referrer-Policy':'same-origin','Content-Type':'text/html; charset=utf-8'}});}
 async function handle(request:Request,env:Env){
  const url=new URL(request.url),path=url.pathname;
  if(request.method==='GET'&&(path.startsWith('/assets/')||path.startsWith('/brand/')||path==='/icon.svg'))return env.ASSETS.fetch(request);

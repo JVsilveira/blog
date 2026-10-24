@@ -88,3 +88,11 @@ it('OAuth valida nonce e e-mail confirmado antes de criar sessão privada',async
   if(mode==='valid'){const secret=await work;expect(await readSession(env,request('/',{headers:{Cookie:sessionCookie+'='+secret}}))).toMatchObject({email:'editor@example.org'});}else await expect(work).rejects.toMatchObject({status:403});
  }
 });
+it('HTML preserva Origin do formulário; início do login continua recusando origem null ou externa',async()=>{
+ const page=await worker.fetch(request('/login'),env);
+ expect(page.headers.get('Referrer-Policy')).toBe('same-origin');
+ for(const origin of ['null','https://evil.example'])expect((await worker.fetch(request('/auth/google',{method:'POST',headers:{Origin:origin}}),env)).status).toBe(403);
+ const response=await worker.fetch(request('/auth/google',{method:'POST',headers:{Origin:env.EDITORIAL_ORIGIN}}),env);
+ expect(response.status).toBe(303);expect(new URL(response.headers.get('Location')!).hostname).toBe('accounts.google.com');
+ expect(response.headers.get('Referrer-Policy')).toBe('no-referrer');
+});
