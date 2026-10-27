@@ -1,4 +1,5 @@
 import {z} from 'zod';
+import {suggestQuote,QuoteAIError} from './quote-ai';
 import {AdminError} from '../../admin/lib/config';
 import {suggestTitle,titleAIStatus} from '../../admin/lib/title-ai';
 import {configured,beginGoogle,finishGoogle,requireSession,readSession,checkMutation,cookie,cookies,sessionCookie,transactionCookie,revoke,equal,rateLimit} from './auth';
@@ -8,15 +9,22 @@ import type {Env,Context} from './types';
 const security={'Cache-Control':'private, no-store','X-Robots-Tag':'noindex, nofollow','X-Frame-Options':'DENY','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer'};
 const json=(value:unknown,status=200)=>Response.json(value,{status,headers:security});
 const redirect=(location:string,values:string[]=[])=>{const headers=new Headers({...security,Location:location});for(const c of values)headers.append('Set-Cookie',c);return new Response(null,{status:303,headers});};
-async function limitedJSON(request:Request){
+async function limitedJSON(request:Request,maxBytes=512*1024){
  if(!request.headers.get('Content-Type')?.startsWith('application/json'))throw new AdminError('Envie JSON.',415);
  const reader=request.body?.getReader();if(!reader)throw new AdminError('Solicitação vazia.');const chunks:Uint8Array[]=[];let size=0;
- while(true){const part=await reader.read();if(part.done)break;size+=part.value.length;if(size>512*1024){await reader.cancel();throw new AdminError('Conteúdo maior que 512 KB.',413);}chunks.push(part.value);}
+ while(true){const part=await reader.read();if(part.done)break;size+=part.value.length;if(size>maxBytes){await reader.cancel();throw new AdminError('Conteúdo acima do limite permitido.',413);}chunks.push(part.value);}
  try{return JSON.parse(Buffer.concat(chunks).toString('utf8')) as unknown;}catch{throw new AdminError('JSON inválido.');}
 }
 function html(content:string){return new Response('<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Área editorial | SilfonTech</title><link rel="icon" href="/icon.svg"><link rel="stylesheet" href="/assets/main.css"></head><body>'+content+'</body></html>',{headers:{...security,'Referrer-Policy':'same-origin','Content-Type':'text/html; charset=utf-8'}});}
 async function handle(request:Request,env:Env){
  const url=new URL(request.url),path=url.pathname;
+ if(path==='/api/quotes/suggest'){
+  if(!quoteOrigins(env).includes(request.headers.get('Origin')??''))throw new AdminError('Origem recusada.',403);
+  if(request.method==='OPTIONS')return new Response(null,{status:204});
+  if(request.method!=='POST')return json({error:'Use POST.'},405);
+  await rateLimit(env,request,'quote-minute',2);
+  return json(await suggestQuote(await limitedJSON(request,16384),env,request.headers.get('CF-Connecting-IP')??'unknown',request.signal));
+ }
  if(request.method==='GET'&&(path.startsWith('/assets/')||path.startsWith('/brand/')||path==='/icon.svg'))return env.ASSETS.fetch(request);
  if(url.origin!==env.EDITORIAL_ORIGIN)return redirect(env.EDITORIAL_ORIGIN+(path==='/login'?'/login':'/'));
  if(path==='/internal/export'&&request.method==='GET'){
@@ -58,8 +66,15 @@ async function handle(request:Request,env:Env){
  return json({error:'Rota não encontrada.'},404);
 }
 function jsonWithCookie(value:unknown,valueCookie:string){const response=json(value);response.headers.append('Set-Cookie',valueCookie);return response;}
+function quoteOrigins(env:Env){return [env.PUBLIC_SITE_URL,...(env.QUOTE_ALLOWED_ORIGINS??'').split(',')].map(s=>s.trim()).filter(Boolean);}
 const worker={
- async fetch(request:Request,env:Env){try{return await handle(request,env);}catch(error){if(error instanceof AdminError)return json({error:error.message},error.status);if(error instanceof z.ZodError)return json({error:error.issues[0]?.message??'Confira os campos.'},400);return json({error:'Não foi possível concluir a operação. Tente novamente.'},503);}},
+ async fetch(request:Request,env:Env){
+  let response:Response;
+  try{response=await handle(request,env);}catch(error){response=error instanceof AdminError?json({error:error.message},error.status):error instanceof z.ZodError?json({error:error.issues[0]?.message??'Confira os campos.'},400):json({error:'Não foi possível concluir a operação. Tente novamente.'},503);if(error instanceof QuoteAIError)response.headers.set('X-Quote-Failure',error.diagnostic);}
+  if(new URL(request.url).pathname==='/api/quotes/suggest'&&quoteOrigins(env).includes(request.headers.get('Origin')??'')){
+   response.headers.set('Access-Control-Allow-Origin',request.headers.get('Origin')!);response.headers.set('Vary','Origin');response.headers.set('Access-Control-Allow-Methods','POST, OPTIONS');response.headers.set('Access-Control-Allow-Headers','Content-Type');response.headers.set('Cache-Control','no-store');
+  }return response;
+ },
  async scheduled(_event:unknown,env:Env,ctx:Context){ctx.waitUntil(env.DB.batch([env.DB.prepare('DELETE FROM auth_records WHERE expires<?').bind(Date.now()),env.DB.prepare('DELETE FROM rate_limits WHERE expires<?').bind(Date.now()),env.DB.prepare('DELETE FROM editorial_history WHERE id IN (SELECT id FROM editorial_history ORDER BY id DESC LIMIT -1 OFFSET 1000)')]));},
 };
 

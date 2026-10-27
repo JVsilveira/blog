@@ -9,7 +9,7 @@ export async function lastPublish(env:Env){
  const before=JSON.stringify(job);
  const persist=()=>env.DB.prepare('UPDATE settings SET value=? WHERE key=? AND value=?').bind(JSON.stringify(job),'publication',before).run();
  try{
-  const response=await fetch(env.PUBLIC_SITE_URL+'/data/editorial-version.json?revision='+encodeURIComponent(job.targetRevision),{redirect:'error',signal:AbortSignal.timeout(8000),headers:{'Cache-Control':'no-cache'}});
+  const response=await fetch(env.PUBLIC_SITE_URL+'/data/editorial-version.json?revision='+encodeURIComponent(job.targetRevision),{redirect:'manual',signal:AbortSignal.timeout(8000),headers:{'Cache-Control':'no-cache'}});
   if(response.ok&&(await response.json() as {revision?:string}).revision===job.targetRevision){job.state='success';job.finishedAt=new Date().toISOString();job.message='A nova versão foi confirmada no site público.';await persist();}
  }catch{/* Uma próxima consulta pode confirmar a entrega. */}
  if(Date.now()-Date.parse(job.startedAt)>15*60000&&job.state==='queued'){job.state='failed';job.finishedAt=new Date().toISOString();job.message='O site ainda não confirmou esta versão. Confira o build no Cloudflare Pages.';await persist();}
@@ -26,7 +26,7 @@ export async function publish(env:Env){
  if(!claim.meta.changes)throw new AdminError('Outra publicação começou. Atualize a página.',409);
  try{
   const url=new URL(env.PAGES_DEPLOY_HOOK);if(url.protocol!=='https:'||url.hostname!=='api.cloudflare.com')throw new Error('Hook inválido');
-  const response=await fetch(url,{method:'POST',redirect:'error',signal:AbortSignal.timeout(15000)});
+  const response=await fetch(url,{method:'POST',redirect:'manual',signal:AbortSignal.timeout(15000)});
   if(!response.ok)throw new Error('Publicação recusada');
  }catch{job.state='failed';job.finishedAt=new Date().toISOString();job.message='Não foi possível acionar o build. Tente novamente mais tarde.';await env.DB.prepare('UPDATE settings SET value=? WHERE key=? AND value=?').bind(JSON.stringify(job),'publication',value).run();throw new AdminError(job.message,503);}
  return job;

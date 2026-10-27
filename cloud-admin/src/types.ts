@@ -13,6 +13,7 @@ export interface Env {
  EDITORIAL_ORIGIN:string;PUBLIC_SITE_URL:string;
  EDITORIAL_ADMIN_EMAILS:string;GOOGLE_CLIENT_ID:string;GOOGLE_CLIENT_SECRET:string;
  EDITORIAL_EXPORT_TOKEN:string;PAGES_DEPLOY_HOOK:string;
+ QUOTE_AI_ENABLED?:string;QUOTE_ALLOWED_ORIGINS?:string;
  EDITORIAL_AI_ENABLED?:string;GEMINI_API_KEY?:string;
 }
 export type Context={waitUntil(work:Promise<unknown>):void};

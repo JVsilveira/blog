@@ -1,4 +1,5 @@
 import { z } from "zod";
+import {citySizeSchema,serviceTypeSchema,estimateOutput} from "./estimate";
 const text = z
   .string()
   .max(2000)
@@ -36,6 +37,8 @@ export const quoteSchema = z
     provider: person,
     customer: person,
     serviceContext: z.strictObject({
+      citySize: citySizeSchema.optional(),
+      serviceType: serviceTypeSchema.optional(),
       equipment: short,
       report: text,
       notes: text,
@@ -64,6 +67,7 @@ export const quoteSchema = z
       diagnosis: text,
       professional: text,
     }),
+    pricing: estimateOutput.extend({model:z.literal("gemini-3.5-flash-lite"),suggestedAt:z.iso.datetime()}).optional(),
     currency: z.literal("BRL"),
   })
   .refine(

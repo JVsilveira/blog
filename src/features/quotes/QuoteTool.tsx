@@ -1,848 +1,795 @@
 "use client";
-import { analytics } from "../../lib/analytics";
 import { useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import {
   blankItem,
   blankQuote,
   brl,
-  decimal,
-  importQuote,
-  MAX_BYTES,
-  quoteSchema,
-  reviewErrors,
   totals,
+  reviewErrors,
+  quoteSchema,
   type Quote,
 } from "../../domain/quotes/model";
-import { readQuotes, writeQuotes, withDocument, clearQuotes } from "./storage";
+import {
+  citySizes,
+  serviceTypes,
+  estimateInput,
+  matchedEstimate,
+  type Estimate,
+} from "../../domain/quotes/estimate";
+import { readQuotes, writeQuotes, withDocument } from "./storage";
+import { Field, NumberField } from "./QuoteFields";
 import styles from "./quotes.module.css";
-const termLabels = {
-  deadline: "Prazo estimado",
-  validity: "Validade da proposta",
-  payment: "Forma de pagamento",
-  exclusions: "Exclusões",
-  diagnosis: "Dependências de diagnóstico",
-  professional: "Termos do profissional",
-};
-function Field({
-  label,
-  value,
-  onChange,
-  required = false,
-  multiline = false,
-}: {
-  label: string;
-  value: string;
-  onChange: (s: string) => void;
-  required?: boolean;
-  multiline?: boolean;
-}) {
-  return (
-    <label>
-      {label}
-      {required ? " *" : ""}
-      {multiline ? (
-        <textarea
-          maxLength={2000}
-          value={value}
-          onChange={(e) => {
-            e.target.setCustomValidity(
-              /[<>\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(e.target.value)
-                ? "Não use HTML ou caracteres de controle."
-                : "",
-            );
-            onChange(e.target.value);
-          }}
-        />
-      ) : (
-        <input
-          required={required}
-          maxLength={160}
-          value={value}
-          onChange={(e) => {
-            e.target.setCustomValidity(
-              /[<>\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(e.target.value)
-                ? "Não use HTML ou caracteres de controle."
-                : "",
-            );
-            onChange(e.target.value);
-          }}
-        />
-      )}
-    </label>
-  );
-}
-function NumberField({
-  label,
-  value,
-  digits,
-  onChange,
-  min = 0,
-  max = 100_000_000,
-}: {
-  label: string;
-  value: number;
-  digits: number;
-  onChange: (n: number) => void;
-  min?: number;
-  max?: number;
-}) {
-  const [raw, setRaw] = useState<string | null>(null);
-  return (
-    <label>
-      {label}
-      <input
-        required
-        inputMode="decimal"
-        value={raw ?? String(value / 10 ** digits).replace(".", ",")}
-        onChange={(e) => {
-          setRaw(e.target.value);
-          try {
-            const n = decimal(e.target.value, digits);
-            if (n < min || n > max) throw Error("Valor fora do limite.");
-            e.target.setCustomValidity("");
-            onChange(n);
-          } catch {
-            e.target.setCustomValidity(
-              `Informe valor entre ${min / 10 ** digits} e ${max / 10 ** digits}, até ${digits} casas decimais.`,
-            );
-          }
-        }}
-        onBlur={(e) => {
-          if (e.target.validity.valid) setRaw(null);
-        }}
-      />
-    </label>
-  );
+const Advanced = dynamic(
+  () => import("./AdvancedQuoteTool").then((m) => m.AdvancedQuoteTool),
+  { ssr: false },
+);
+const steps = ["Atendimento", "Valores", "Cliente e condições", "Revisão"];
+const api =
+  process.env.NEXT_PUBLIC_QUOTE_API_URL ||
+  "https://silfontech-admin.devsilveira.workers.dev/api/quotes/suggest";
+function initialQuote() {
+  const q = blankQuote();
+  return {
+    ...q,
+    documentNumber: `TI-${new Date().toISOString().slice(0, 10).replaceAll("-", "")}-${q.id.slice(0, 4).toUpperCase()}`,
+    items: [
+      {
+        ...blankItem(),
+        unit: "serviço",
+        estimateSource: "Valor definido pelo profissional",
+      },
+    ],
+    terms: {
+      ...q.terms,
+      exclusions:
+        "Peças, licenças e deslocamento não estão incluídos, salvo quando discriminados nesta proposta.",
+      diagnosis:
+        "Escopo e prazo sujeitos à confirmação após diagnóstico. Qualquer serviço adicional depende de aprovação do cliente.",
+    },
+  };
 }
 export function QuoteTool() {
-  const [q, setQ] = useState<Quote>(blankQuote);
-  const [review, setReview] = useState(false);
-  const [loadVersion, setLoadVersion] = useState(0);
-  const [message, setMessage] = useState("");
-  const [errors, setErrors] = useState<string[]>([]);
-  const [saved, setSaved] = useState<Quote[]>([]);
-  const [loaded, setLoaded] = useState(false);
-  const [confirm, setConfirm] = useState<null | (() => void)>(null);
-  const errorRef = useRef<HTMLDivElement>(null);
-  const form = useRef<HTMLFormElement>(null);
+  const [q, setQ] = useState<Quote>(initialQuote),
+    [step, setStep] = useState(0),
+    [advanced, setAdvanced] = useState(false),
+    [busy, setBusy] = useState(false),
+    [message, setMessage] = useState(""),
+    [suggestion, setSuggestion] = useState<Estimate | null>(null),
+    [saved, setSaved] = useState<Quote[]>([]);
+  const form = useRef<HTMLFormElement>(null),
+    heading = useRef<HTMLHeadingElement>(null),
+    generation = useRef(0);
   const sum = totals(q);
   function change(update: (old: Quote) => Quote) {
+    generation.current++;
     setQ((old) => ({
       ...update(old),
       status: "draft",
       revision: old.status === "issued" ? old.revision + 1 : old.revision,
       updatedAt: new Date().toISOString(),
     }));
-    setReview(false);
-    setErrors([]);
     setMessage("");
   }
-  function attempt(action: () => void) {
+  function contextChange(update: (old: Quote) => Quote) {
+    change((old) => ({ ...update(old), pricing: undefined }));
+    setSuggestion(null);
+  }
+  function move(next: number) {
+    setStep(next);
+    setMessage("");
+    requestAnimationFrame(() => heading.current?.focus());
+  }
+  function validContext() {
+    if (q.items.some((i) => i.kind !== "serviço")) {
+      setMessage(
+        "Este documento inclui peças ou outros itens. Use o editor avançado para preservar esse detalhamento.",
+      );
+      return false;
+    }
     try {
-      action();
+      estimateInput.parse({
+        citySize: q.serviceContext.citySize,
+        modality: q.serviceContext.modality,
+        serviceType: q.serviceContext.serviceType,
+        services: q.items.map((i) => ({
+          id: i.id,
+          description: i.description,
+        })),
+      });
+      return true;
     } catch {
       setMessage(
-        "Não foi possível acessar ou salvar os dados locais: armazenamento bloqueado, cheio ou corrompido. Nada foi apagado. Você pode exportar JSON.",
+        "Selecione porte da cidade e tipo de serviço. Descreva de 1 a 10 serviços, com 8 a 160 caracteres cada, sem dados pessoais ou credenciais.",
       );
+      return false;
     }
   }
-  function validFields(required = false) {
+  async function suggest() {
+    if (!validContext() || busy) return;
+    setBusy(true);
+    setMessage("Analisando os serviços…");
+    const version = ++generation.current;
+    try {
+      const input = estimateInput.parse({
+        citySize: q.serviceContext.citySize,
+        modality: q.serviceContext.modality,
+        serviceType: q.serviceContext.serviceType,
+        services: q.items.map((i) => ({
+          id: i.id,
+          description: i.description,
+        })),
+      });
+      const response = await fetch(api, {
+        method: "POST",
+        credentials: "omit",
+        redirect: "error",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(input),
+        signal: AbortSignal.timeout(35000),
+      });
+      const body = await response.json();
+      if (!response.ok)
+        throw Error(body.error || "Não foi possível obter a sugestão.");
+      const result = matchedEstimate(body, input);
+      if (generation.current !== version) {
+        setMessage(
+          "O orçamento mudou durante a análise. Os valores foram mantidos; solicite outra sugestão.",
+        );
+        return;
+      }
+      change((old) => ({
+        ...old,
+        pricing: {
+          ...result,
+          model: "gemini-3.5-flash-lite",
+          suggestedAt: new Date().toISOString(),
+        },
+        items: old.items.map((item) => ({
+          ...item,
+          unitPriceCents: result.items.find((i) => i.id === item.id)!
+            .suggestedCents,
+          estimateSource: "Estimativa Gemini, revisável pelo profissional",
+        })),
+      }));
+      setSuggestion(result);
+      move(1);
+      setMessage(
+        "Sugestões aplicadas. Confira cada valor e ajuste como preferir.",
+      );
+    } catch (error) {
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível sugerir os valores. Continue manualmente.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function pdf() {
+    if (!form.current?.reportValidity()) return;
+    const errors = reviewErrors(q);
+    if (errors.length) {
+      setMessage(errors.join(" "));
+      return;
+    }
+    setBusy(true);
+    try {
+      const { downloadQuotePDF } = await import("./pdf");
+      await downloadQuotePDF(q);
+      setMessage("PDF gerado neste dispositivo.");
+    } catch (error) {
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível gerar o PDF.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+  function save() {
     const invalid = Array.from(
       form.current?.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>(
-        "input, textarea",
+        "input,textarea",
       ) ?? [],
-    ).filter(
-      (el) =>
-        !el.validity.valid &&
-        (required || !el.validity.valueMissing || el.validity.customError),
-    );
-    return invalid;
-  }
-  function validate() {
-    const invalid = validFields(true);
-    const e = [
-      ...reviewErrors(q),
-      ...invalid
-        .filter((el) => !el.validity.valueMissing)
-        .map((el) => `${el.labels?.[0]?.textContent}: ${el.validationMessage}`),
-    ];
-    setErrors(e);
-    if (e.length) {
-      requestAnimationFrame(() => {
-        (invalid[0] ?? errorRef.current)?.focus();
-      });
-      return false;
+    ).find((el) => !el.validity.valid && !el.validity.valueMissing);
+    if (invalid) {
+      invalid.reportValidity();
+      return;
     }
-    return true;
-  }
-  function validDraft() {
-    const invalid = validFields();
-    if (invalid.length) {
-      invalid[0]?.reportValidity();
-      return false;
-    }
-    return true;
-  }
-  function save(doc: Quote) {
-    attempt(() => {
-      const previous = readQuotes(localStorage);
-      const next = withDocument(previous, doc);
+    try {
+      const next = withDocument(readQuotes(localStorage), quoteSchema.parse(q));
       writeQuotes(localStorage, next);
       setSaved(next);
-      setLoaded(true);
+      setMessage("Orçamento salvo somente neste dispositivo.");
+    } catch {
       setMessage(
-        "Documento salvo neste dispositivo. Alterações posteriores precisam ser salvas novamente.",
+        "Não foi possível salvar: armazenamento cheio, bloqueado ou corrompido. Nada foi apagado.",
       );
-    });
+    }
   }
-  function load(doc: Quote) {
-    setLoadVersion((v) => v + 1);
-    setQ(doc);
-    setReview(false);
-    setErrors([]);
-    setMessage("Documento aberto em memória.");
+  function updateItem(id: string, patch: Partial<Quote["items"][number]>) {
+    change((old) => ({
+      ...old,
+      items: old.items.map((i) => (i.id === id ? { ...i, ...patch } : i)),
+    }));
   }
-  function replace(action: () => void) {
-    requestAnimationFrame(() =>
-      document.getElementById("confirmar-acao")?.focus(),
+  if (advanced)
+    return (
+      <Advanced
+        initialQuote={q}
+        onBack={(doc) => {
+          generation.current++;
+          setQ(doc);
+          setSuggestion(null);
+          setAdvanced(false);
+          setStep(0);
+        }}
+      />
     );
-    setConfirm(() => () => {
-      action();
-      setConfirm(null);
-    });
-  }
-  function exportJSON() {
-    const blob = new Blob([JSON.stringify(quoteSchema.parse(q), null, 2)], {
-      type: "application/json",
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "orcamento.json";
-    a.click();
-    analytics.track({name:"quote_export",format:"json"});
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-    setMessage(
-      "JSON exportado. Proteja o arquivo: ele contém dados do cliente.",
-    );
-  }
   return (
     <div className={styles.tool}>
-      <div className={styles.editor}>
-        <p>
-          Preencha, revise e imprima. Os dados ficam em memória até você
-          escolher salvar ou exportar. Proposta não é nota fiscal nem laudo.
-        </p>
-        <p>
-          Não há envio remoto. Preços e condições são definidos pelo
-          profissional; estimativas podem depender de diagnóstico.
-        </p>
-        <noscript>Ative JavaScript para preencher o orçamento local.</noscript>
-        <div role="status" className={styles.notice}>
-          {message}
-        </div>
-        {confirm ? (
-          <div
-            className={styles.notice}
-            role="group"
-            aria-label="Confirmar ação"
-          >
-            <p>
-              Confirmar esta ação? Dados em memória não salvos ou documentos
-              excluídos não poderão ser recuperados. Exporte antes, se
-              necessário.
-            </p>
-            <button id="confirmar-acao" onClick={() => confirm()}>
-              Confirmar ação
-            </button>{" "}
-            <button onClick={() => setConfirm(null)}>Cancelar</button>
-          </div>
-        ) : null}
-        {errors.length ? (
-          <div role="alert" tabIndex={-1} ref={errorRef}>
-            <h2>Revise os campos</h2>
-            <ul>
-              {errors.map((e) => (
-                <li key={e}>{e}</li>
-              ))}
-            </ul>
-            <p>Os dados foram mantidos. Volte às seções indicadas.</p>
-          </div>
-        ) : null}
+      <p className={styles.lead}>
+        Descreva o atendimento, ajuste os valores e prepare uma proposta para o
+        seu cliente.
+      </p>
+      <nav aria-label="Etapas do orçamento" className={styles.steps}>
+        {steps.map((label, n) => (
+          <span key={label} aria-current={step === n ? "step" : undefined}>
+            <b>{n + 1}</b>
+            {label}
+          </span>
+        ))}
+      </nav>
+      <div className={styles.layout}>
         <form
-          key={loadVersion}
-          noValidate
           ref={form}
+          noValidate
           onSubmit={(e) => {
             e.preventDefault();
-            if (validate()) {
-              setReview(true);
-              requestAnimationFrame(() =>
-                document.getElementById("revisao")?.focus(),
+            if (!form.current?.reportValidity()) return;
+            if (step === 0) {
+              if (validContext()) move(1);
+            } else if (step === 2) {
+              const errors = reviewErrors(q);
+              if (errors.length) setMessage(errors.join(" "));
+              else move(3);
+            } else move(Math.min(3, step + 1));
+          }}
+        >
+          <h2 ref={heading} tabIndex={-1}>
+            {steps[step]}
+          </h2>
+          {step === 0 && (
+            <fieldset disabled={busy} className={styles.simpleFieldset}>
+              <label>
+                Porte da cidade do atendimento
+                <select
+                  required
+                  value={q.serviceContext.citySize ?? ""}
+                  onChange={(e) =>
+                    contextChange((old) => ({
+                      ...old,
+                      serviceContext: {
+                        ...old.serviceContext,
+                        citySize: e.target.value as NonNullable<
+                          Quote["serviceContext"]["citySize"]
+                        >,
+                      },
+                    }))
+                  }
+                >
+                  <option value="" disabled>
+                    Selecione o tamanho da cidade
+                  </option>
+                  {Object.entries(citySizes).map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <div className={styles.numbers}>
+                <label>
+                  Modalidade
+                  <select
+                    value={q.serviceContext.modality}
+                    onChange={(e) =>
+                      contextChange((old) => ({
+                        ...old,
+                        serviceContext: {
+                          ...old.serviceContext,
+                          modality: e.target.value as "remota" | "presencial",
+                        },
+                      }))
+                    }
+                  >
+                    <option value="presencial">Presencial</option>
+                    <option value="remota">Remoto</option>
+                  </select>
+                </label>
+                <label>
+                  Tipo de serviço
+                  <select
+                    required
+                    value={q.serviceContext.serviceType ?? ""}
+                    onChange={(e) =>
+                      contextChange((old) => ({
+                        ...old,
+                        serviceContext: {
+                          ...old.serviceContext,
+                          serviceType: e.target.value as NonNullable<
+                            Quote["serviceContext"]["serviceType"]
+                          >,
+                        },
+                      }))
+                    }
+                  >
+                    <option value="" disabled>
+                      Selecione
+                    </option>
+                    {Object.entries(serviceTypes).map(([value, label]) => (
+                      <option key={value} value={value}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+              <h3>O que será feito?</h3>
+              <p className={styles.hint}>
+                Descreva o trabalho e sua complexidade. Não inclua nomes,
+                telefones, documentos ou senhas.
+              </p>
+              {q.items.map((item, n) => (
+                <div key={item.id} className={styles.serviceEntry}>
+                  <label>
+                    Serviço {n + 1}
+                    <textarea
+                      required
+                      minLength={8}
+                      maxLength={160}
+                      value={item.description}
+                      placeholder="Ex.: limpeza interna de notebook, troca de pasta térmica e teste de temperatura"
+                      onChange={(e) =>
+                        contextChange((old) => ({
+                          ...old,
+                          items: old.items.map((i) =>
+                            i.id === item.id
+                              ? { ...i, description: e.target.value }
+                              : i,
+                          ),
+                        }))
+                      }
+                    />
+                  </label>
+                  {q.items.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        contextChange((old) => ({
+                          ...old,
+                          items: old.items.filter((i) => i.id !== item.id),
+                        }))
+                      }
+                    >
+                      Remover serviço {n + 1}
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button
+                type="button"
+                disabled={q.items.length >= 10}
+                onClick={() =>
+                  contextChange((old) => ({
+                    ...old,
+                    items: [
+                      ...old.items,
+                      {
+                        ...blankItem(),
+                        unit: "serviço",
+                        estimateSource: "Valor definido pelo profissional",
+                      },
+                    ],
+                  }))
+                }
+              >
+                + Adicionar serviço
+              </button>
+              <div className={styles.aiBox}>
+                <h3>Uma referência para começar</h3>
+                <p>
+                  O Gemini considera o serviço, a modalidade e o porte da
+                  cidade. A sugestão não é uma pesquisa atual de preços.
+                </p>
+                <p className={styles.hint}>
+                  Ao solicitar, somente estas descrições técnicas e opções serão
+                  enviadas ao Google. No nível gratuito, o conteúdo pode ser
+                  usado para melhorar os produtos do Google.
+                </p>
+                <button
+                  className={styles.primary}
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void suggest()}
+                >
+                  {busy ? "Analisando…" : "Sugerir valores com IA"}
+                </button>
+              </div>
+            </fieldset>
+          )}
+          {step === 1 && (
+            <>
+              <p>
+                Você define o preço final. Altere os valores abaixo ou peça uma
+                nova sugestão.
+              </p>
+              <fieldset disabled={busy} className={styles.simpleFieldset}>
+                {q.items.map((item, n) => (
+                  <div key={item.id} className={styles.priceEntry}>
+                    <h3>
+                      {n + 1}. {item.description}
+                    </h3>
+                    <div className={styles.numbers}>
+                      <NumberField
+                        label={`Valor unitário do serviço ${n + 1} (R$)`}
+                        value={item.unitPriceCents}
+                        digits={2}
+                        onChange={(unitPriceCents) =>
+                          updateItem(item.id, {
+                            unitPriceCents,
+                            estimateSource: "Valor revisado pelo profissional",
+                          })
+                        }
+                      />
+                      <NumberField
+                        label={`Quantidade do serviço ${n + 1}`}
+                        value={item.quantityMillis}
+                        digits={3}
+                        min={1}
+                        max={1_000_000}
+                        onChange={(quantityMillis) =>
+                          updateItem(item.id, { quantityMillis })
+                        }
+                      />
+                    </div>
+                    {suggestion?.items.find((i) => i.id === item.id) && (
+                      <p className={styles.hint}>
+                        Sugestão:{" "}
+                        {brl(
+                          suggestion.items.find((i) => i.id === item.id)!
+                            .suggestedCents,
+                        )}{" "}
+                        por execução.{" "}
+                        {suggestion.items.find((i) => i.id === item.id)!.reason}
+                      </p>
+                    )}
+                    <strong>Total do serviço: {brl(sum.lines[n] ?? 0)}</strong>
+                  </div>
+                ))}
+                {suggestion && (
+                  <p className={styles.notice}>{suggestion.assumptions}</p>
+                )}
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void suggest()}
+                >
+                  {busy ? "Analisando…" : "Sugerir valores novamente"}
+                </button>
+                <p className={styles.hint}>
+                  Uma nova sugestão substitui os valores atuais. Se preferir,
+                  mantenha os seus.
+                </p>
+                <NumberField
+                  label="Desconto (R$)"
+                  value={
+                    q.discount.kind === "fixed"
+                      ? q.discount.value
+                      : sum.discount
+                  }
+                  digits={2}
+                  onChange={(value) =>
+                    change((old) => ({
+                      ...old,
+                      discount: { kind: "fixed", value },
+                    }))
+                  }
+                />
+                <NumberField
+                  label="Deslocamento e outros acréscimos (R$)"
+                  value={q.additionalCharges.amountCents}
+                  digits={2}
+                  onChange={(amountCents) =>
+                    change((old) => ({
+                      ...old,
+                      additionalCharges: {
+                        ...old.additionalCharges,
+                        amountCents,
+                      },
+                    }))
+                  }
+                />
+                {q.additionalCharges.amountCents > 0 && (
+                  <Field
+                    label="Descrição dos acréscimos"
+                    required
+                    value={q.additionalCharges.description}
+                    onChange={(description) =>
+                      change((old) => ({
+                        ...old,
+                        additionalCharges: {
+                          ...old.additionalCharges,
+                          description,
+                        },
+                      }))
+                    }
+                  />
+                )}
+              </fieldset>
+            </>
+          )}
+          {step === 2 && (
+            <fieldset disabled={busy} className={styles.simpleFieldset}>
+              <p className={styles.hint}>
+                Estes dados ficam no seu dispositivo e no PDF. Eles não são
+                enviados ao Gemini.
+              </p>
+              <Field
+                label="Número do orçamento"
+                required
+                value={q.documentNumber}
+                onChange={(documentNumber) =>
+                  change((old) => ({ ...old, documentNumber }))
+                }
+              />
+              <div className={styles.numbers}>
+                <Field
+                  label="Seu nome ou empresa"
+                  required
+                  value={q.provider.name}
+                  onChange={(name) =>
+                    change((old) => ({
+                      ...old,
+                      provider: { ...old.provider, name },
+                    }))
+                  }
+                />
+                <Field
+                  label="Seu contato"
+                  required
+                  value={q.provider.contact}
+                  onChange={(contact) =>
+                    change((old) => ({
+                      ...old,
+                      provider: { ...old.provider, contact },
+                    }))
+                  }
+                />
+                <Field
+                  label="Nome do cliente"
+                  required
+                  value={q.customer.name}
+                  onChange={(name) =>
+                    change((old) => ({
+                      ...old,
+                      customer: { ...old.customer, name },
+                    }))
+                  }
+                />
+              </div>
+              <Field
+                label="Contato do cliente (opcional)"
+                value={q.customer.contact}
+                onChange={(contact) =>
+                  change((old) => ({
+                    ...old,
+                    customer: { ...old.customer, contact },
+                  }))
+                }
+              />
+              <Field
+                label="Cidade / UF (opcional)"
+                value={q.serviceContext.locality}
+                onChange={(locality) =>
+                  change((old) => ({
+                    ...old,
+                    serviceContext: { ...old.serviceContext, locality },
+                  }))
+                }
+              />
+              {Object.entries({
+                deadline: "Prazo de execução",
+                validity: "Validade da proposta",
+                payment: "Condições de pagamento",
+              }).map(([key, label]) => (
+                <Field
+                  key={key}
+                  label={label}
+                  required
+                  value={q.terms[key as keyof Quote["terms"]]}
+                  onChange={(value) =>
+                    change((old) => ({
+                      ...old,
+                      terms: { ...old.terms, [key]: value },
+                    }))
+                  }
+                />
+              ))}
+              <details>
+                <summary>Escopo, exclusões e condições adicionais</summary>
+                {Object.entries({
+                  exclusions: "O que não está incluído",
+                  diagnosis: "Diagnóstico e dependências",
+                  professional: "Condições adicionais",
+                }).map(([key, label]) => (
+                  <Field
+                    key={key}
+                    label={label}
+                    multiline
+                    value={q.terms[key as keyof Quote["terms"]]}
+                    onChange={(value) =>
+                      change((old) => ({
+                        ...old,
+                        terms: { ...old.terms, [key]: value },
+                      }))
+                    }
+                  />
+                ))}
+              </details>
+            </fieldset>
+          )}
+          {step === 3 && (
+            <section className={styles.proposal}>
+              <h3>Orçamento {q.documentNumber}</h3>
+              <p>
+                <strong>{q.provider.name}</strong> · {q.provider.contact}
+              </p>
+              <p>Para: {q.customer.name}</p>
+              <p>
+                {q.serviceContext.modality} ·{" "}
+                {q.serviceContext.serviceType
+                  ? serviceTypes[q.serviceContext.serviceType]
+                  : ""}
+                {q.serviceContext.locality
+                  ? " · " + q.serviceContext.locality
+                  : ""}
+              </p>
+              {q.items.map((item, n) => (
+                <div className={styles.previewLine} key={item.id}>
+                  <span>
+                    {item.description}
+                    <small>
+                      {item.quantityMillis / 1000} × {brl(item.unitPriceCents)}
+                    </small>
+                  </span>
+                  <strong>{brl(sum.lines[n] ?? 0)}</strong>
+                </div>
+              ))}
+              <p>
+                Desconto: {brl(sum.discount)} · Acréscimos:{" "}
+                {brl(sum.additional)}
+              </p>
+              <p className={styles.total}>Total: {brl(sum.total)}</p>
+              {Object.entries({
+                deadline: "Prazo",
+                validity: "Validade",
+                payment: "Pagamento",
+                exclusions: "Exclusões",
+                diagnosis: "Diagnóstico",
+                professional: "Condições adicionais",
+              }).map(
+                ([key, label]) =>
+                  q.terms[key as keyof Quote["terms"]] && (
+                    <p key={key}>
+                      <strong>{label}:</strong>{" "}
+                      {q.terms[key as keyof Quote["terms"]]}
+                    </p>
+                  ),
+              )}
+              <p className={styles.hint}>
+                Revise os valores e as condições antes de apresentar a proposta.
+                Orçamento não é nota fiscal nem laudo.
+              </p>
+              <button
+                className={styles.primary}
+                type="button"
+                disabled={busy}
+                onClick={() => void pdf()}
+              >
+                {busy ? "Preparando PDF…" : "Baixar orçamento em PDF"}
+              </button>
+            </section>
+          )}
+          <div role="status" aria-live="polite" className={styles.notice}>
+            {message}
+          </div>
+          <div className={styles.actions}>
+            {step > 0 && (
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => move(step - 1)}
+              >
+                Voltar
+              </button>
+            )}
+            {step < 3 && (
+              <button className={styles.primary} disabled={busy} type="submit">
+                {step === 0
+                  ? "Continuar com valores manuais"
+                  : step === 2
+                    ? "Revisar orçamento"
+                    : "Continuar"}
+              </button>
+            )}
+          </div>
+        </form>
+        <aside className={styles.side}>
+          <span>Seu orçamento</span>
+          <p className={styles.total}>{brl(sum.total)}</p>
+          <p>
+            {q.items.length} {q.items.length === 1 ? "serviço" : "serviços"} ·{" "}
+            {q.serviceContext.modality}
+          </p>
+          <p className={styles.hint}>
+            Peças e licenças só entram se você as adicionar. O preço final é
+            sempre definido por você.
+          </p>
+        </aside>
+      </div>
+      <details className={styles.local}>
+        <summary>Salvar, abrir ou usar opções avançadas</summary>
+        <p>
+          Salvar é opcional e usa somente este navegador. Evite dispositivos
+          compartilhados.
+        </p>
+        <button onClick={save}>Salvar neste dispositivo</button>
+        <button
+          onClick={() => {
+            try {
+              setSaved(readQuotes(localStorage));
+              setMessage("Documentos locais carregados.");
+            } catch {
+              setMessage(
+                "Armazenamento indisponível ou corrompido. Nada foi apagado.",
               );
             }
           }}
         >
-          <p>
-            * Campos obrigatórios para revisão. Até 40 itens e 20 documentos
-            locais.
-          </p>
-          <fieldset>
-            <legend>Identificação</legend>
-            <Field
-              label="Número do orçamento"
-              required
-              value={q.documentNumber}
-              onChange={(v) => change((o) => ({ ...o, documentNumber: v }))}
-            />
-            {(["provider", "customer"] as const).map((key) => (
-              <div key={key} className={styles.group}>
-                <h2>{key === "provider" ? "Prestador" : "Cliente"}</h2>
-                {(
-                  [
-                    "name",
-                    "contact",
-                    ...(key === "provider" ? ["identification"] : ["address"]),
-                  ] as ("name" | "contact" | "identification" | "address")[]
-                ).map((f) => (
-                  <Field
-                    key={f}
-                    label={
-                      {
-                        name: "Nome ou empresa",
-                        contact: "Contato",
-                        identification: "Identificação fiscal (opcional)",
-                        address: "Endereço (somente se necessário)",
-                      }[f]
-                    }
-                    required={
-                      f === "name" || (key === "provider" && f === "contact")
-                    }
-                    value={q[key][f]}
-                    onChange={(v) =>
-                      change((o) => ({ ...o, [key]: { ...o[key], [f]: v } }))
-                    }
-                  />
-                ))}
-              </div>
-            ))}
-          </fieldset>
-          <fieldset>
-            <legend>Atendimento</legend>
-            {Object.entries({
-              equipment: "Tipo de equipamento",
-              report: "Relato",
-              notes: "Observações técnicas",
-              locality: "Localidade",
-              estimatedHours: "Horas estimadas",
-              serialNumber: "Número de série (opcional)",
-            }).map(([k, label]) => (
-              <Field
-                key={k}
-                label={label}
-                multiline={k === "report" || k === "notes"}
-                value={q.serviceContext[k as keyof Quote["serviceContext"]]}
-                onChange={(v) =>
-                  change((o) => ({
-                    ...o,
-                    serviceContext: { ...o.serviceContext, [k]: v },
-                  }))
-                }
-              />
-            ))}
-            <p>
-              Registre série e endereço apenas se necessários ao atendimento.
-            </p>
-            <label>
-              Modalidade
-              <select
-                value={q.serviceContext.modality}
-                onChange={(e) =>
-                  change((o) => ({
-                    ...o,
-                    serviceContext: {
-                      ...o.serviceContext,
-                      modality: e.target.value as "remota" | "presencial",
-                    },
-                  }))
-                }
-              >
-                <option>remota</option>
-                <option>presencial</option>
-              </select>
-            </label>
-          </fieldset>
-          <fieldset>
-            <legend>Itens e valores</legend>
-            {!q.items.length ? (
-              <p>
-                Nenhum item. Adicione um serviço, peça ou deslocamento com seus
-                próprios valores.
-              </p>
-            ) : null}
-            {q.items.map((item, n) => {
-              const update = (patch: Partial<typeof item>) =>
-                change((o) => ({
-                  ...o,
-                  items: o.items.map((i) =>
-                    i.id === item.id ? { ...i, ...patch } : i,
-                  ),
-                }));
-              return (
-                <div className={styles.item} key={item.id}>
-                  <h3>Item {n + 1}</h3>
-                  <label>
-                    Tipo
-                    <select
-                      value={item.kind}
-                      onChange={(e) =>
-                        update({ kind: e.target.value as typeof item.kind })
-                      }
-                    >
-                      {["serviço", "peça", "deslocamento", "outro"].map((k) => (
-                        <option key={k}>{k}</option>
-                      ))}
-                    </select>
-                  </label>
-                  <Field
-                    label="Descrição"
-                    required
-                    value={item.description}
-                    onChange={(description) => update({ description })}
-                  />
-                  <div className={styles.numbers}>
-                    <NumberField
-                      label="Quantidade (até 3 casas)"
-                      value={item.quantityMillis}
-                      digits={3}
-                      min={1}
-                      max={1_000_000}
-                      onChange={(quantityMillis) => update({ quantityMillis })}
-                    />
-                    <Field
-                      label="Unidade"
-                      required
-                      value={item.unit}
-                      onChange={(unit) => update({ unit })}
-                    />
-                    <NumberField
-                      label="Preço unitário (R$)"
-                      value={item.unitPriceCents}
-                      digits={2}
-                      onChange={(unitPriceCents) => update({ unitPriceCents })}
-                    />
-                  </div>
-                  <Field
-                    label="Origem da estimativa"
-                    required
-                    value={item.estimateSource}
-                    onChange={(estimateSource) => update({ estimateSource })}
-                  />
-                  <Field
-                    label="Observação"
-                    multiline
-                    value={item.note}
-                    onChange={(note) => update({ note })}
-                  />
-                  <p>
-                    Total do item: <strong>{brl(sum.lines[n] ?? 0)}</strong>
-                  </p>
-                  <button
-                    type="button"
-                    disabled={q.items.length >= 40}
-                    onClick={() =>
-                      change((o) => ({
-                        ...o,
-                        items: [
-                          ...o.items,
-                          { ...item, id: crypto.randomUUID() },
-                        ],
-                      }))
-                    }
-                  >
-                    Duplicar item {n + 1}
-                  </button>{" "}
-                  <button
-                    type="button"
-                    onClick={() =>
-                      change((o) => ({
-                        ...o,
-                        items: o.items.filter((i) => i.id !== item.id),
-                      }))
-                    }
-                  >
-                    Remover item {n + 1}
-                  </button>
-                </div>
-              );
-            })}
+          Abrir salvos
+        </button>
+        {saved.map((doc) => (
+          <p key={`${doc.id}-${doc.revision}-${doc.status}`}>
             <button
-              type="button"
-              disabled={q.items.length >= 40}
-              onClick={() =>
-                change((o) => ({ ...o, items: [...o.items, blankItem()] }))
-              }
-            >
-              Adicionar item
-            </button>
-            <label>
-              Tipo de desconto
-              <select
-                value={q.discount.kind}
-                onChange={(e) =>
-                  change((o) => ({
-                    ...o,
-                    discount: {
-                      kind: e.target.value as "fixed" | "percent",
-                      value: 0,
-                    },
-                  }))
-                }
-              >
-                <option value="fixed">Valor fixo em reais</option>
-                <option value="percent">
-                  Percentual sobre subtotal dos itens
-                </option>
-              </select>
-            </label>
-            <NumberField
-              key={q.discount.kind}
-              label={
-                q.discount.kind === "fixed" ? "Desconto (R$)" : "Desconto (%)"
-              }
-              digits={2}
-              value={q.discount.value}
-              max={q.discount.kind === "percent" ? 10000 : 100_000_000}
-              onChange={(value) =>
-                change((o) => ({ ...o, discount: { ...o.discount, value } }))
-              }
-            />
-            <p>
-              Desconto limitado ao subtotal. Acréscimo fixo aplicado depois;
-              nenhum imposto é presumido.
-            </p>
-            <Field
-              label="Descrição do acréscimo"
-              value={q.additionalCharges.description}
-              onChange={(description) =>
-                change((o) => ({
-                  ...o,
-                  additionalCharges: { ...o.additionalCharges, description },
-                }))
-              }
-            />
-            <NumberField
-              label="Acréscimo (R$)"
-              value={q.additionalCharges.amountCents}
-              digits={2}
-              onChange={(amountCents) =>
-                change((o) => ({
-                  ...o,
-                  additionalCharges: { ...o.additionalCharges, amountCents },
-                }))
-              }
-            />
-            <p>
-              Subtotal {brl(sum.subtotal)} · Desconto {brl(sum.discount)} ·
-              Acréscimo {brl(sum.additional)}
-            </p>
-            <p className={styles.total}>Total: {brl(sum.total)}</p>
-          </fieldset>
-          <fieldset>
-            <legend>Condições</legend>
-            {Object.entries(termLabels).map(([key, label]) => (
-              <Field
-                key={key}
-                label={label}
-                multiline
-                value={q.terms[key as keyof Quote["terms"]]}
-                onChange={(v) =>
-                  change((o) => ({ ...o, terms: { ...o.terms, [key]: v } }))
-                }
-              />
-            ))}
-          </fieldset>
-          <button type="submit">Revisar orçamento</button>
-        </form>
-        <section className={styles.local}>
-          <h2>Arquivos e dispositivo</h2>
-          <p>
-            Salvar é opcional. Pessoas com acesso a este navegador podem ler os
-            documentos. Limpar os dados do navegador remove os salvos. Não use
-            em computador compartilhado.
-          </p>
-          <button
-            onClick={() => {
-              if (validDraft()) save(q);
-            }}
-          >
-            Salvar neste dispositivo
-          </button>{" "}
-          <button
-            onClick={() =>
-              attempt(() => {
-                setSaved(readQuotes(localStorage));
-                setLoaded(true);
-                setMessage("Lista local carregada.");
-              })
-            }
-          >
-            Listar documentos salvos
-          </button>
-          <p>
-            O JSON contém dados do cliente. Guarde o arquivo em local privado e
-            só o compartilhe por sua decisão.
-          </p>
-          <button
-            onClick={() => {
-              if (validDraft()) exportJSON();
-            }}
-          >
-            Exportar JSON
-          </button>
-          <label>
-            Importar JSON (até 512 KB)
-            <input
-              type="file"
-              accept=".json,application/json"
-              onChange={async (e) => {
-                const file = e.target.files?.[0];
-                e.target.value = "";
-                if (!file) return;
-                try {
-                  if (file.size > MAX_BYTES)
-                    throw Error("Arquivo excede 512 KB.");
-                  const doc = importQuote(await file.text());
-                  replace(() => load(doc));
-                } catch {
-                  setMessage(
-                    "Importação recusada: use JSON versão 1 válido, até 512 KB, sem HTML e dentro dos limites. O orçamento atual foi mantido.",
-                  );
-                }
-              }}
-            />
-          </label>
-          <button onClick={() => replace(() => load(blankQuote()))}>
-            Novo orçamento
-          </button>
-          {loaded ? (
-            <>
-              <h3>Documentos neste navegador</h3>
-              {!saved.length ? (
-                <p>Nenhum documento salvo.</p>
-              ) : (
-                <ul>
-                  {saved.map((doc, n) => (
-                    <li key={`${doc.id}-${doc.revision}-${doc.status}`}>
-                      {doc.documentNumber || "Sem número"} — revisão{" "}
-                      {doc.revision},{" "}
-                      {doc.status === "issued" ? "emitido" : "rascunho"}{" "}
-                      <button onClick={() => replace(() => load(doc))}>
-                        Abrir documento {n + 1}
-                      </button>{" "}
-                      <button
-                        onClick={() =>
-                          replace(() =>
-                            load({
-                              ...doc,
-                              id: crypto.randomUUID(),
-                              status: "draft",
-                              revision: 1,
-                              createdAt: new Date().toISOString(),
-                              updatedAt: new Date().toISOString(),
-                            }),
-                          )
-                        }
-                      >
-                        Duplicar documento {n + 1}
-                      </button>{" "}
-                      <button
-                        onClick={() =>
-                          replace(() =>
-                            attempt(() => {
-                              const next = readQuotes(localStorage).filter(
-                                (p) =>
-                                  !(
-                                    p.id === doc.id &&
-                                    p.revision === doc.revision &&
-                                    p.status === doc.status
-                                  ),
-                              );
-                              writeQuotes(localStorage, next);
-                              setSaved(next);
-                              setMessage("Documento excluído.");
-                            }),
-                          )
-                        }
-                      >
-                        Excluir documento {n + 1}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              <button
-                onClick={() =>
-                  replace(() =>
-                    attempt(() => {
-                      clearQuotes(localStorage);
-                      setSaved([]);
-                      setMessage(
-                        "Documentos locais apagados. O formulário em memória foi mantido.",
-                      );
-                    }),
-                  )
-                }
-              >
-                Apagar todos os documentos locais
-              </button>
-            </>
-          ) : null}
-        </section>
-      </div>
-      {review ? (
-        <>
-          <div className={styles.editor}>
-            <button onClick={() => setReview(false)}>Voltar à edição</button>{" "}
-            <button onClick={() => {window.print(); analytics.track({name:"quote_export",format:"pdf"});}}>
-              Imprimir / salvar PDF
-            </button>{" "}
-            <button
-              disabled={q.status === "issued"}
               onClick={() => {
-                const doc = {
-                  ...q,
-                  status: "issued" as const,
-                  updatedAt: new Date().toISOString(),
-                };
-                attempt(() => {
-                  const previous = readQuotes(localStorage);
-                  writeQuotes(localStorage, withDocument(previous, doc));
-                  setSaved(readQuotes(localStorage));
-                  setLoaded(true);
+                if (
+                  window.confirm(
+                    "Abrir este documento e substituir as alterações em memória?",
+                  )
+                ) {
+                  generation.current++;
                   setQ(doc);
-                  setMessage(
-                    "Snapshot emitido salvo localmente. Editar cria nova revisão; o snapshot anterior permanece.",
-                  );
-                });
+                  setSuggestion(null);
+                  move(0);
+                }
               }}
             >
-              Emitir e salvar snapshot neste dispositivo
+              {doc.documentNumber || "Sem número"} · revisão {doc.revision}
             </button>
-            <p>
-              Emitir grava uma cópia local, sem validade jurídica especial. A
-              edição posterior cria nova revisão. Na impressão, desative
-              cabeçalhos e rodapés do navegador se não quiser URL e data.
-            </p>
-          </div>
-          <article id="revisao" tabIndex={-1} className={styles.document}>
-            <h2>Orçamento {q.documentNumber}</h2>
-            <p>
-              Revisão {q.revision} ·{" "}
-              {q.status === "issued" ? "Emitido" : "Rascunho"} ·{" "}
-              {new Date(q.updatedAt).toLocaleDateString("pt-BR", {
-                timeZone: "America/Sao_Paulo",
-              })}
-            </p>
-            <h3>Prestador</h3>
-            {Object.values(q.provider)
-              .filter(Boolean)
-              .map((v, n) => (
-                <p key={n}>{v}</p>
-              ))}
-            <h3>Cliente</h3>
-            {Object.values(q.customer)
-              .filter(Boolean)
-              .map((v, n) => (
-                <p key={n}>{v}</p>
-              ))}
-            <h3>Atendimento</h3>
-            {Object.entries(q.serviceContext)
-              .filter(([, v]) => v)
-              .map(([k, v]) => (
-                <p key={k}>
-                  <strong>
-                    {
-                      {
-                        equipment: "Equipamento",
-                        report: "Relato",
-                        notes: "Observações",
-                        modality: "Modalidade",
-                        locality: "Localidade",
-                        estimatedHours: "Horas estimadas",
-                        serialNumber: "Série",
-                      }[k]
-                    }
-                    :{" "}
-                  </strong>
-                  {v}
-                </p>
-              ))}
-            <table>
-              <thead>
-                <tr>
-                  <th>Item / origem</th>
-                  <th>Qtd.</th>
-                  <th>Unitário</th>
-                  <th>Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {q.items.map((i, n) => (
-                  <tr key={i.id}>
-                    <td>
-                      {i.description} ({i.kind})<br />
-                      {i.note}
-                      <br />
-                      Origem: {i.estimateSource}
-                    </td>
-                    <td>
-                      {(i.quantityMillis / 1000).toLocaleString("pt-BR")}{" "}
-                      {i.unit}
-                    </td>
-                    <td>{brl(i.unitPriceCents)}</td>
-                    <td>{brl(sum.lines[n] ?? 0)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <div className={styles.summary}>
-              <p>Subtotal: {brl(sum.subtotal)}</p>
-              <p>
-                Desconto: {brl(sum.discount)}
-                {q.discount.kind === "percent"
-                  ? ` (${q.discount.value / 100}%)`
-                  : ""}
-              </p>
-              <p>
-                Acréscimo: {brl(sum.additional)} —{" "}
-                {q.additionalCharges.description}
-              </p>
-              <p>
-                <strong>Total: {brl(sum.total)}</strong>
-              </p>
-            </div>
-            <h3>Condições</h3>
-            {Object.entries(termLabels).map(([k, label]) =>
-              q.terms[k as keyof Quote["terms"]] ? (
-                <div key={k}>
-                  <h4>{label}</h4>
-                  <p>{q.terms[k as keyof Quote["terms"]]}</p>
-                </div>
-              ) : null,
-            )}
-            <p>
-              Valores definidos pelo profissional. Estimativas sujeitas às
-              condições e ao diagnóstico informado. Proposta não é nota fiscal
-              nem laudo.
-            </p>
-          </article>
-        </>
-      ) : (
-        <p className={styles.editor}>
-          Revise o orçamento para preparar o documento de impressão.
+          </p>
+        ))}
+        <p>
+          Importação e exportação JSON, impressão, peças, descontos percentuais
+          e snapshots continuam no editor avançado.
         </p>
-      )}
+        <button disabled={busy} onClick={() => setAdvanced(true)}>
+          Abrir editor avançado
+        </button>
+      </details>
     </div>
   );
 }

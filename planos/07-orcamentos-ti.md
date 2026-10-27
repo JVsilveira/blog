@@ -29,3 +29,13 @@ Cobrir R$ 0, quantidade 1,5 hora, descontos fixo/percentual, arredondamento, des
 
 ## Monetização
 Ferramenta gratuita pode atrair técnicos; recomendações de ferramentas e periféricos ficam fora do formulário e nunca usam dados do cliente. Versão paga e sincronização remota são futuras, sem paywall no MVP.
+
+## Evolução autorizada em 27/10/2026 — fluxo simplificado e Gemini
+
+O proprietário solicitou porte da cidade como primeiro campo, seguido por modalidade presencial/remota, categoria hardware/software/ambos e uma ou mais descrições. Essa autorização substitui a proibição de IA somente para o envio explícito do escopo técnico: nomes, contatos, endereço e documento do cliente permanecem locais. Não enviar o Quote completo, dados de orçamentos anteriores ou dados Icecat.
+
+Fluxo padrão em quatro etapas: Atendimento, Valores, Cliente e condições, Revisão. Gemini sugere honorários por execução em BRL; todos são editáveis. Porte da cidade influencia qualitativamente, sem coeficientes inventados apresentados como pesquisa de mercado; remoto reduz esse peso. Não há pesquisa web, peças, licenças ou deslocamento presumidos. Descrições devem ser técnicas, sem PII. Editor avançado preserva documentos v1, import/export JSON, peças, descontos percentuais e snapshots; adicionais opcionais de contexto/proveniência são compatíveis com v1.
+
+PDF gerado diretamente no navegador com fonte Noto Sans hospedada localmente/OFL, paginação A4, prestador, cliente, escopo, itens, totais, condições editáveis, premissas da IA quando presentes e aceite. Não é nota fiscal/laudo. Persistência continua opcional e local.
+
+Endpoint público separado no Worker existente, sem autenticar leitores ou expor chave. Origin/CORS explícitos, JSON estrito e limite de tamanho, 2 solicitações/minuto/IP, 5/dia/IP e 30/dia globais, com contadores hash/temporários em D1. Sem logs de descrições, repetição automática, grounding, fallback pago ou upgrade. Isso limita abuso, mas Origin não autentica scripts externos. O projeto da chave deve continuar no Free: código não comprova faturamento pela chave. Falha/quota mantém orçamento e permite preços manuais. Implementação/limites em docs/orcamentos-ti.md.

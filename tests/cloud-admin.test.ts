@@ -96,3 +96,17 @@ it('HTML preserva Origin do formulário; início do login continua recusando ori
  expect(response.status).toBe(303);expect(new URL(response.headers.get('Location')!).hostname).toBe('accounts.google.com');
  expect(response.headers.get('Referrer-Policy')).toBe('no-referrer');
 });
+it('oferece CORS somente ao site público e mantém API editorial privada',async()=>{
+ const origin=env.PUBLIC_SITE_URL;
+ const response=await worker.fetch(request('/api/quotes/suggest',{method:'OPTIONS',headers:{Origin:origin,'Access-Control-Request-Method':'POST'}}),env);
+ expect(response.status).toBe(204);expect(response.headers.get('Access-Control-Allow-Origin')).toBe(origin);expect(response.headers.has('Access-Control-Allow-Credentials')).toBe(false);
+ const denied=await worker.fetch(request('/api/quotes/suggest',{method:'POST',headers:{Origin:'https://evil.example','Content-Type':'application/json'},body:'{}'}),env);expect(denied.status).toBe(403);expect(denied.headers.has('Access-Control-Allow-Origin')).toBe(false);
+});
+it('envia somente escopo técnico ao Gemini e falha sem fallback quando desativado',async()=>{
+ const id=crypto.randomUUID(),body={citySize:'tiny',modality:'presencial',serviceType:'hardware',services:[{id,description:'Limpeza interna de notebook e troca de pasta térmica'}]};
+ const fetcher=vi.fn(async()=>Response.json({status:'completed',steps:[{type:'model_output',content:[{type:'text',text:JSON.stringify({items:[{id,suggestedCents:18000,reason:'Estimativa de mão de obra, sem peças.'}],assumptions:'Confirmar condições após diagnóstico.'})}]}]}));vi.stubGlobal('fetch',fetcher);
+ const req=()=>request('/api/quotes/suggest',{method:'POST',headers:{Origin:env.PUBLIC_SITE_URL,'Content-Type':'application/json'},body:JSON.stringify(body)});
+ expect((await worker.fetch(req(),env)).status).toBe(503);expect(fetcher).not.toHaveBeenCalled();
+ const result=await worker.fetch(req(),{...env,QUOTE_AI_ENABLED:'true',GEMINI_API_KEY:'private-test-key'});expect(result.status).toBe(200);expect((await result.json()).items[0].suggestedCents).toBe(18000);
+ const sent=JSON.parse((fetcher.mock.calls as unknown as [string,RequestInit][])[0]![1].body as string);expect(JSON.parse(sent.input)).toEqual(body);expect(sent.store).toBe(false);expect(sent.tools).toBeUndefined();
+});

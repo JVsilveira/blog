@@ -1,35 +1,36 @@
 {
-	"$schema": "../node_modules/wrangler/config-schema.json",
-	"name": "silfontech-admin",
-	"main": "src/index.ts",
-	"account_id": "ac2483adaf37ac4c21e727a4638b3beb",
-	"compatibility_date": "2026-10-23",
-	"compatibility_flags": [
-		"nodejs_compat"
-	],
-	"workers_dev": true,
-	"assets": {
-		"directory": "./public",
-		"binding": "ASSETS",
-		"run_worker_first": true
-	},
-	"observability": {
-		"enabled": false
-	},
-	"vars": {
-		"EDITORIAL_ORIGIN": "https://silfontech-admin.devsilveira.workers.dev",
-		"PUBLIC_SITE_URL": "https://silfontech.com.br"
-	},
-	"triggers": {
-		"crons": [
-			"0 3 * * *"
-		]
-	},
-	"d1_databases": [
-		{
-			"binding": "DB",
-			"database_name": "silfontech-editorial",
-			"database_id": "bfdb30b0-553b-4a6b-8435-449cf276f68b"
-		}
-	]
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "silfontech-admin",
+  "main": "src/index.ts",
+  "account_id": "ac2483adaf37ac4c21e727a4638b3beb",
+  "compatibility_date": "2026-10-23",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "workers_dev": true,
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "run_worker_first": true
+  },
+  "observability": {
+    "enabled": false
+  },
+  "vars": {
+    "EDITORIAL_ORIGIN": "https://silfontech-admin.devsilveira.workers.dev",
+    "PUBLIC_SITE_URL": "https://silfontech.com.br",
+    "QUOTE_AI_ENABLED": "true"
+  },
+  "triggers": {
+    "crons": [
+      "0 3 * * *"
+    ]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "silfontech-editorial",
+      "database_id": "bfdb30b0-553b-4a6b-8435-449cf276f68b"
+    }
+  ]
 }

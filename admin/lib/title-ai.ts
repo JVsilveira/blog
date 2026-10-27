@@ -36,7 +36,7 @@ export async function suggestTitle(input:unknown, signal?:AbortSignal, env:Recor
     const styles = ['direto e claro','em forma de pergunta','centrado no benefício real para o leitor'];
     // Uma chamada por clique; nenhuma repetição automática que possa gerar cobrança extra.
     const response = await fetch('https://generativelanguage.googleapis.com/v1beta/interactions', {
-      method:'POST', redirect:'error',
+      method:'POST', redirect:'manual',
       headers:{'Content-Type':'application/json','x-goog-api-key':env.GEMINI_API_KEY!.trim()},
       signal:AbortSignal.any([AbortSignal.timeout(30000),...(signal ? [signal] : [])]),
       body:JSON.stringify({

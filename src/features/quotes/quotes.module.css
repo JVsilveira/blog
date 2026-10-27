@@ -165,3 +165,30 @@
     width: 43%;
   }
 }
+/* Fluxo simplificado: o atendimento vem antes dos dados do cliente. */
+.lead {max-width:68ch;color:var(--muted);font-size:18px;line-height:1.7;}
+.steps {display:flex;gap:20px;border-bottom:1px solid var(--border);padding:20px 0;margin-bottom:32px;flex-wrap:wrap;}
+.steps span {display:flex;align-items:center;gap:8px;color:var(--muted);font-size:14px;}
+.steps b {display:grid;place-items:center;border-radius:50%;width:28px;height:28px;background:var(--surface);}
+.steps [aria-current] {color:var(--primary);font-weight:700;}
+.steps [aria-current] b {background:var(--primary);color:white;}
+.layout {display:grid;grid-template-columns:minmax(0,1fr) 235px;gap:40px;align-items:start;}
+.layout h2 {margin-top:0;outline-offset:6px;}
+.tool .simpleFieldset {margin:0;padding:0;border:0;}
+.simpleFieldset .numbers {grid-template-columns:repeat(2,minmax(0,1fr));}
+.serviceEntry,.priceEntry {border-bottom:1px solid var(--border);padding:8px 0 20px;}
+.serviceEntry textarea {min-height:90px;}
+.hint {font-size:14px;color:var(--muted);line-height:1.6;}
+.aiBox {padding:20px 24px;background:var(--surface);border-left:3px solid var(--primary);margin-top:24px;}
+.aiBox h3 {margin-top:0;}
+.tool .primary {color:white;background:var(--primary);font-weight:600;}
+.side {position:sticky;top:24px;border-top:4px solid var(--primary);padding:22px;background:var(--surface);}
+.side .total {margin:14px 0;}
+.actions {display:flex;justify-content:space-between;gap:12px;margin-top:24px;flex-wrap:wrap;}
+.previewLine {display:flex;justify-content:space-between;gap:20px;padding:18px 0;border-bottom:1px solid var(--border);overflow-wrap:anywhere;}
+.previewLine small {display:block;color:var(--muted);margin-top:6px;}
+.previewLine strong {white-space:nowrap;}
+.proposal {line-height:1.7;}
+.proposal>p {overflow-wrap:anywhere;}
+.local summary,.simpleFieldset summary {cursor:pointer;font-weight:600;padding:12px 0;}
+@media(max-width:800px){.layout {grid-template-columns:1fr;gap:24px;}.side {position:static;}.steps {gap:12px;}.steps span {font-size:12px;}.simpleFieldset .numbers {grid-template-columns:1fr;gap:0;}.aiBox {padding:16px;}}
