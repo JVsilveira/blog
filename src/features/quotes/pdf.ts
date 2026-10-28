@@ -6,8 +6,20 @@ import {
   brl,
   type Quote,
 } from "../../domain/quotes/model";
-import { citySizes, serviceTypes } from "../../domain/quotes/estimate";
+import { serviceTypes } from "../../domain/quotes/estimate";
 let font: Promise<string> | undefined;
+export function quoteAttendanceLines(q: Quote) {
+  return [
+    `Modalidade: ${q.serviceContext.modality}`,
+    q.serviceContext.locality &&
+      `Cidade/localidade: ${q.serviceContext.locality}`,
+    q.serviceContext.serviceType &&
+      `Categoria: ${serviceTypes[q.serviceContext.serviceType]}`,
+    q.serviceContext.equipment && `Equipamento: ${q.serviceContext.equipment}`,
+    q.serviceContext.report && `Solicitação: ${q.serviceContext.report}`,
+    q.serviceContext.notes && `Observações: ${q.serviceContext.notes}`,
+  ].filter(Boolean) as string[];
+}
 async function loadFont() {
   font ??= fetch("/fonts/NotoSans-Regular.ttf", { credentials: "omit" })
     .then(async (response) => {
@@ -100,23 +112,7 @@ export async function createQuotePDF(input: Quote, fontBase64?: string) {
       .join("\n"),
   );
   heading("Atendimento");
-  text(
-    [
-      `Modalidade: ${q.serviceContext.modality}`,
-      q.serviceContext.locality &&
-        `Cidade/localidade: ${q.serviceContext.locality}`,
-      q.serviceContext.citySize &&
-        `Porte: ${citySizes[q.serviceContext.citySize]}`,
-      q.serviceContext.serviceType &&
-        `Categoria: ${serviceTypes[q.serviceContext.serviceType]}`,
-      q.serviceContext.equipment &&
-        `Equipamento: ${q.serviceContext.equipment}`,
-      q.serviceContext.report && `Solicitação: ${q.serviceContext.report}`,
-      q.serviceContext.notes && `Observações: ${q.serviceContext.notes}`,
-    ]
-      .filter(Boolean)
-      .join("\n"),
-  );
+  text(quoteAttendanceLines(q).join("\n"));
   const sum = totals(q);
   heading("Serviços e valores");
   for (const [index, item] of q.items.entries()) {
