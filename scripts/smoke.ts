@@ -55,7 +55,8 @@ try {
   const recommendations = await fetch(base + '/recomendacoes/');
   assert.equal(recommendations.status,200);
   const catalogHtml = await recommendations.text();
-  assert.match(catalogHtml,/Ainda não há recomendações revisadas/);
+  assert.match(catalogHtml,/Ofertas e produtos selecionados/);
+  assert.match(catalogHtml,/Links de afiliado/);
   assert.doesNotMatch(catalogHtml,/CPU sintética|example\.org|tag=fixture/);
   const builder=await fetch(base+'/pcs/montar/'); assert.equal(builder.status,200); const builderHtml=await builder.text(); assert.match(builderHtml,/Montador indisponível/); assert.doesNotMatch(builderHtml,/Salvar neste dispositivo|cpu-test|sintético/);
   const pcs=await fetch(base+'/pcs/'); assert.equal(pcs.status,200); const pcHtml=await pcs.text(); assert.match(pcHtml,/Configurações em revisão/); assert.doesNotMatch(pcHtml,/sintético|example\.org/);

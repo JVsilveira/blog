@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Markdown from "react-markdown";
 import { HardwareManager } from "./HardwareManager";
+import { MercadoConnection } from "./MercadoConnection";
 import { AccountProfile } from "./AccountProfile";
 import { TranslationEditor, type TranslationDraft } from "./TranslationEditor";
 import { TitleAssistant } from "./TitleAssistant";
@@ -305,7 +306,7 @@ export function Dashboard({
             </section>
           ) : (
             <>
-              {tab === "hardware" && online && <section><h1>Produtos e comparadores</h1><p>A sincronização do catálogo continua no processo local. As postagens, fontes e autores podem ser administrados por aqui.</p></section>}
+              {tab === "hardware" && online && <MercadoConnection csrf={csrf}/>}
               {tab === "hardware" && !online && <HardwareManager mercadoFeedback={mercadoFeedback} csrf={csrf} building={building} buildMessage={job?.message??""} onGenerate={generate} onDirtyChange={setDirty}/>}
               {tab === "articles" && (
                 <section>

@@ -15,5 +15,7 @@ export interface Env {
  EDITORIAL_EXPORT_TOKEN:string;PAGES_DEPLOY_HOOK:string;
  QUOTE_AI_ENABLED?:string;QUOTE_ALLOWED_ORIGINS?:string;
  EDITORIAL_AI_ENABLED?:string;GEMINI_API_KEY?:string;
+ MERCADOLIVRE_CLIENT_ID?:string;MERCADOLIVRE_CLIENT_SECRET?:string;MERCADOLIVRE_TOKEN_KEY?:string;
+ MERCADOLIVRE_DIAGNOSTIC_TOKEN?:string;
 }
 export type Context={waitUntil(work:Promise<unknown>):void};

@@ -7,7 +7,9 @@ import worker from '../cloud-admin/src/index';
 import {hash,sessionCookie,beginGoogle,finishGoogle,readSession} from '../cloud-admin/src/auth';
 import {readWorkspace,mutateWorkspace} from '../cloud-admin/src/store';
 import {publish,lastPublish} from '../cloud-admin/src/publish';
+import {beginMercado,finishMercado,mercadoAccess,mercadoStatus,probeMercado,resolveMercadoLink} from '../cloud-admin/src/mercadolivre';
 import type {Database,Statement,Env} from '../cloud-admin/src/types';
+import {manageRecommendations,listRecommendations,refreshRecommendations} from '../cloud-admin/src/recommendations';
 let sqlite:DatabaseSync,env:Env;
 class Query implements Statement{
  values:unknown[]=[];
@@ -33,6 +35,88 @@ it('protege painel, bootstrap e exportação; não expõe rascunhos anonimamente
  expect((await worker.fetch(request('/'),env)).headers.get('Location')).toBe('/login');
  for(const path of ['/api/bootstrap','/api/workspace','/internal/export'])expect((await worker.fetch(request(path),env)).status).toBe(401);
  const response=await worker.fetch(request('/internal/export',{headers:{Authorization:'Bearer export-secret'}}),env);expect(response.status).toBe(200);expect(response.headers.get('Cache-Control')).toContain('no-store');expect((await response.json()).revision).toBe('initial');
+});
+it('conecta Mercado Livre com PKCE e sessão vinculada, criptografa tokens e impede replay',async()=>{
+ Object.assign(env,{MERCADOLIVRE_CLIENT_ID:'123',MERCADOLIVRE_CLIENT_SECRET:'test-secret',MERCADOLIVRE_TOKEN_KEY:'ab'.repeat(32)});
+ const editor={email:'editor@example.org',sub:'subject',csrf:'csrf',expires:Date.now()+60000};
+ const login=await beginMercado(env,editor),url=new URL(login.url);
+ expect(url.searchParams.get('redirect_uri')).toBe(env.EDITORIAL_ORIGIN+'/auth/mercadolivre/callback');expect(url.searchParams.get('code_challenge_method')).toBe('S256');
+ const fetcher=vi.fn(async()=>Response.json({access_token:'private-access',refresh_token:'private-refresh',expires_in:21600}));vi.stubGlobal('fetch',fetcher);
+ await expect(finishMercado(env,editor,login.browserToken,'wrong','code')).rejects.toMatchObject({status:401});expect(fetcher).not.toHaveBeenCalled();
+ await finishMercado(env,editor,login.browserToken,url.searchParams.get('state')!,'code');
+ const stored=String(sqlite.prepare('SELECT value FROM settings WHERE key=?').get('mercadolivre-connection')?.value);expect(stored).not.toContain('private-access');expect(stored).not.toContain('private-refresh');
+ expect(await mercadoAccess(env)).toBe('private-access');expect(await mercadoStatus(env)).toMatchObject({connected:true});
+ await expect(finishMercado(env,editor,login.browserToken,url.searchParams.get('state')!,'code')).rejects.toMatchObject({status:401});
+ expect(JSON.stringify(await (await worker.fetch(request('/internal/export',{headers:{Authorization:'Bearer export-secret'}}),env)).json())).not.toContain('private-access');
+});
+it('protege início da conexão e teste Mercado Livre com autenticação, origem e CSRF',async()=>{
+ expect((await worker.fetch(request('/api/hardware/mercadolivre'),env)).status).toBe(401);
+ const headers=session();
+ expect((await worker.fetch(request('/auth/mercadolivre',{method:'POST',headers:{...headers,'X-CSRF-Token':'wrong'}}),env)).status).toBe(403);
+ expect((await worker.fetch(request('/api/hardware/mercadolivre/test',{method:'POST',headers:{...headers,Origin:'https://evil.example'}}),env)).status).toBe(403);
+});
+async function connectedMercado(){
+ Object.assign(env,{MERCADOLIVRE_CLIENT_ID:'123',MERCADOLIVRE_CLIENT_SECRET:'test-secret',MERCADOLIVRE_TOKEN_KEY:'ab'.repeat(32)});
+ const editor={email:'editor@example.org',sub:'subject',csrf:'csrf',expires:Date.now()+60000},login=await beginMercado(env,editor);
+ vi.stubGlobal('fetch',vi.fn(async()=>Response.json({access_token:'private-access',refresh_token:'private-refresh',expires_in:21600})));
+ await finishMercado(env,editor,login.browserToken,new URL(login.url).searchParams.get('state')!,'code');
+}
+function recommendationProvider(){return vi.fn(async(input:RequestInfo|URL)=>{
+ const path=new URL(String(input)).pathname;
+ if(path==='/products/MLB123456')return Response.json({id:'MLB123456',name:'Produto sintético de teste',status:'active',pictures:[{url:'https://http2.mlstatic.com/test.jpg'}],attributes:[{id:'MODEL',name:'Modelo',value_name:'Fixture'}]});
+ if(path==='/products/MLB123456/items')return Response.json({results:[{item_id:'MLB123456789',price:100,original_price:125,currency_id:'BRL'},{item_id:'MLB123456790',price:80,currency_id:'USD'},{item_id:'MLB123456791',price:50,currency_id:'BRL',available_quantity:0}]});
+ return Response.json({error:'forbidden'},{status:403});
+});}
+it('importa card com preço real do catálogo quando sale_price é recusado, mantendo link e sem inventar review',async()=>{
+ await connectedMercado();vi.stubGlobal('fetch',recommendationProvider());const link='https://www.mercadolivre.com.br/p/MLB123456?matt_tool=123#source=affiliate-profile';
+ const result=await manageRecommendations(env,{action:'add',link});
+ expect(result.items[0]).toMatchObject({affiliateUrl:link,price:{amountCents:10000,regularCents:12500,currency:'BRL',itemId:'MLB123456789',source:'catalog_items',scope:'catalog_from'}});
+ expect((await readWorkspace(env.DB)).data.reviews).toHaveLength(0);
+ const publicResponse=await worker.fetch(new Request('https://api.silfontech.com.br/api/recommendations'),env);expect(publicResponse.status).toBe(200);const serialized=await publicResponse.text();expect(serialized).not.toContain('private-access');expect(serialized).not.toContain('lastError');
+ await expect(manageRecommendations(env,{action:'add',link})).rejects.toMatchObject({status:409});
+});
+it('oculta preços vencidos e falhas de atualização; não publica registros removidos nem vaza snapshot privado',async()=>{
+ await connectedMercado();vi.stubGlobal('fetch',recommendationProvider());await manageRecommendations(env,{action:'add',link:'https://www.mercadolivre.com.br/p/MLB123456'});
+ const key='recommendation:MLB123456';const row=sqlite.prepare('SELECT value FROM settings WHERE key=?').get(key);const old=JSON.parse(String(row?.value));old.price.expiresAt=new Date(Date.now()-1000).toISOString();sqlite.prepare('UPDATE settings SET value=? WHERE key=?').run(JSON.stringify(old),key);
+ expect((await listRecommendations(env)).items[0]?.price).toBeNull();
+ vi.stubGlobal('fetch',vi.fn(async()=>Response.json({error:'unavailable'},{status:503})));await refreshRecommendations(env);expect((await listRecommendations(env)).items[0]?.price).toBeNull();
+ await manageRecommendations(env,{action:'remove',id:'MLB123456'});expect((await listRecommendations(env)).items).toHaveLength(0);
+});
+it('recusa importação anônima, CSRF inválido e links de produtos diferentes',async()=>{
+ expect((await worker.fetch(request('/api/recommendations'),env)).status).toBe(401);
+ const headers=session();expect((await worker.fetch(request('/api/recommendations',{method:'POST',headers:{...headers,'X-CSRF-Token':'wrong'},body:JSON.stringify({action:'refresh'})}),env)).status).toBe(403);
+ await expect(manageRecommendations(env,{action:'add',link:'https://www.mercadolivre.com.br/p/MLB123456',productUrl:'https://www.mercadolivre.com.br/p/MLB999999'})).rejects.toBeTruthy();
+});
+it('resolve link curto com GET quando HEAD não é aceito, sem encaminhar tokens ou aceitar outra loja',async()=>{
+ const fetcher=vi.fn().mockResolvedValueOnce(new Response(null,{status:405})).mockResolvedValueOnce(new Response(null,{status:302,headers:{Location:'https://www.mercadolivre.com.br/produto/p/MLB123456?wid=MLB987654321'}}));vi.stubGlobal('fetch',fetcher);
+ expect(await resolveMercadoLink('https://meli.la/test')).toMatchObject({status:200,itemId:'MLB987654321',catalogId:'MLB123456'});
+ expect(fetcher.mock.calls[1]?.[1]).toMatchObject({method:'GET',redirect:'manual'});expect(fetcher.mock.calls[1]?.[1]?.headers).toBeUndefined();
+ fetcher.mockResolvedValueOnce(new Response(null,{status:302,headers:{Location:'https://evil.example/private'}}));
+ await expect(resolveMercadoLink('https://meli.la/test')).rejects.toBeTruthy();expect(fetcher).toHaveBeenCalledTimes(3);
+});
+it('diagnóstico privado não confunde produto com anúncio nem devolve dados privados do provedor',async()=>{
+ Object.assign(env,{MERCADOLIVRE_CLIENT_ID:'123',MERCADOLIVRE_CLIENT_SECRET:'test-secret',MERCADOLIVRE_TOKEN_KEY:'ab'.repeat(32)});
+ const editor={email:'editor@example.org',sub:'subject',csrf:'csrf',expires:Date.now()+60000},login=await beginMercado(env,editor);
+ vi.stubGlobal('fetch',vi.fn(async(input:RequestInfo|URL)=>{
+  const url=String(input);
+  if(url.endsWith('/oauth/token'))return Response.json({access_token:'private-access',refresh_token:'private-refresh',expires_in:21600});
+  if(url.includes('/products/search'))return Response.json({results:[{id:'MLB123'}]});
+  if(url.includes('/highlights/'))return Response.json({content:[{id:'MLB456',type:'PRODUCT'}]});
+  if(url.includes('/items/'))throw new Error('Um ID de produto não deve virar ID de anúncio.');
+  return Response.json({id:123,email:'private-email',access_token:'private-access'});
+ }));
+ await finishMercado(env,editor,login.browserToken,new URL(login.url).searchParams.get('state')!,'code');
+ const report=await probeMercado(env);expect(report).toMatchObject({itemTest:'pending_real_item_link'});expect(report.results.some(r=>r.resource==='item')).toBe(false);
+ expect(JSON.stringify(report)).not.toContain('private-email');expect(JSON.stringify(report)).not.toContain('private-access');
+ expect((await worker.fetch(request('/internal/mercadolivre/probe',{method:'POST'}),env)).status).toBe(401);
+});
+it('renova tokens expirados e preserva criptografia do novo refresh token',async()=>{
+ Object.assign(env,{MERCADOLIVRE_CLIENT_ID:'123',MERCADOLIVRE_CLIENT_SECRET:'test-secret',MERCADOLIVRE_TOKEN_KEY:'ab'.repeat(32)});
+ const editor={email:'editor@example.org',sub:'subject',csrf:'csrf',expires:Date.now()+60000},login=await beginMercado(env,editor);
+ const fetcher=vi.fn().mockResolvedValueOnce(Response.json({access_token:'old-access',refresh_token:'old-refresh',expires_in:1})).mockResolvedValueOnce(Response.json({access_token:'new-access',refresh_token:'new-refresh',expires_in:21600}));vi.stubGlobal('fetch',fetcher);
+ await finishMercado(env,editor,login.browserToken,new URL(login.url).searchParams.get('state')!,'code');
+ expect(await mercadoAccess(env)).toBe('new-access');expect(fetcher).toHaveBeenCalledTimes(2);expect(String(fetcher.mock.calls[1]?.[1]?.body)).toContain('grant_type=refresh_token');
+ expect(String(sqlite.prepare('SELECT value FROM settings WHERE key=?').get('mercadolivre-connection')?.value)).not.toContain('new-refresh');
 });
 it('exige origem e CSRF e revoga sessão quando a conta sai da lista',async()=>{
  const headers=session();expect((await worker.fetch(request('/api/workspace',{method:'POST',headers:{...headers,Origin:'https://evil.example'},body:JSON.stringify(article())}),env)).status).toBe(403);

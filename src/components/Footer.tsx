@@ -23,8 +23,7 @@ export function Footer() {
         <Link href="/para-tecnicos/orcamentos/">Para técnicos</Link>
       </nav>
       <p className="footer-note">
-        Sem anúncios ou links de afiliados ativos. Conteúdo institucional em
-        revisão.
+        Alguns links podem gerar comissão para o SilfonTech. Confira nossa política de afiliados.
       </p>
     </footer>
   );

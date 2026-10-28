@@ -1,5 +1,7 @@
 # Regras para agentes de implementação
 
+- Atualização autorizada em 28/10/2026: Recomendações passa a ter vitrine de produtos/ofertas importados do Mercado Livre, separada de ReviewClaim editorial. Links individuais fornecidos pelo proprietário são preservados. `cloud-admin/src/recommendations.ts` usa catálogo e anúncios associados; `sale_price?context=channel_marketplace` é preferido e preços da listagem associada são fallback identificado como “a partir de”. Original_price é referência da loja, nunca menor preço histórico. Criptografia OAuth e atualização automática no Worker existente; nenhum serviço pago. Detalhes atuais em docs/recomendacoes-mercadolivre.md, que substitui limitações históricas desta feature. Não inventar comissões nem links.
+
 Leia `planos/00-diretrizes-gerais.md` antes de qualquer alteração e `planos/01-arquitetura-e-dados.md` antes de alterar estrutura ou contratos. Leia também o plano e o prompt da etapa solicitada. Este AGENTS.md é uma síntese; os documentos detalhados continuam obrigatórios.
 
 - Objetivo ampliado em 22/10/2026: portal de notícias, opinião e blog de João sobre política, esporte, economia, tecnologia e outros temas, com edições pt/en/es; preservar guias e ferramentas técnicas. Direção em docs/portal-editorial-internacional.md. Receita por afiliados e, posteriormente, AdSense. Sem promessa de receita.

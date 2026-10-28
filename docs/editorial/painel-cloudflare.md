@@ -28,12 +28,24 @@ O conteúdo editorial online passa a ser a fonte de produção. Edições feitas
 - Pages blog, produção: EDITORIAL_EXPORT_URL apontando para `/internal/export` do Worker; EDITORIAL_EXPORT_TOKEN como secret com mesmo valor do Worker. Preservar NODE_VERSION. Preview não recebe esse token.
 - Deploy hook Pages na branch main, nome silfontech-editorial; URL privada fica somente no secret do Worker. Reconfigurar hook/token em ambos os serviços se houver rotação. A configuração operacional privada local é ignorada em .editorial-admin/cloud-integration.json.
 - GET `/internal/export` sem token retorna 401. O export completo inclui rascunhos e é destinado exclusivamente ao build privado, nunca a JavaScript dos leitores. Manifesto `/data/editorial-version.json` contém somente revisão opaca.
-- Cron diário elimina sessões/contadores expirados e limita histórico às últimas 1.000 alterações globais. Histórico não substitui backup: exportar D1 antes de mudanças estruturais (`wrangler d1 export DB --remote --output <arquivo-privado> --config cloud-admin/wrangler.jsonc`) e guardar fora de public/Git.
+- Cron de manutenção elimina sessões/contadores expirados e limita histórico às últimas 1.000 alterações globais. Histórico não substitui backup: exportar D1 antes de mudanças estruturais (`wrangler d1 export DB --remote --output <arquivo-privado> --config cloud-admin/wrangler.jsonc`) e guardar fora de public/Git.
 
 ## Limites desta etapa
 
 Nenhum upgrade ou serviço pago foi ativado. Workers/D1/Pages estão sujeitos às cotas do plano gratuito: excedê-las pode interromper o serviço; o código não contrata capacidade adicional. Não há disponibilidade ilimitada garantida. A conta/projeto Gemini deve continuar sem faturamento, condição que a chave não permite certificar.
 
-Produtos/comparadores, downloads de fotos Icecat e OAuth Mercado Livre continuam no processo Node local. O painel online informa essa limitação e não oferece um botão de sincronização falso. Orçamentos continuam somente no dispositivo do usuário.
+Produtos/comparadores e downloads de fotos Icecat continuam no processo Node local. OAuth Mercado Livre agora também está disponível no painel online, em **Produtos e comparadores**. Orçamentos continuam somente no dispositivo do usuário.
+
+A vitrine de Recomendações e ofertas também está disponível nesse painel: adicionar link de afiliado, atualizar preços e remover produtos. Ela usa API/D1 separada do catálogo editorial. Atualização automática a cada 30 minutos, até seis produtos por execução; detalhes em docs/recomendacoes-mercadolivre.md. O cron de manutenção continua ativo junto dessa atualização.
+
+## Conexão Mercado Livre
+
+Cadastrar no DevCenter a URI HTTPS exata `https://silfontech-admin.devsilveira.workers.dev/auth/mercadolivre/callback`, com Authorization Code, Refresh Token e PKCE S256. Manter apenas as permissões necessárias de consulta.
+
+`node --import tsx scripts/configure-mercado-cloud.ts` transfere Client ID e Client Secret de admin/.env.local aos segredos privados do Worker e cria MERCADOLIVRE_TOKEN_KEY apenas se ausente. Não imprimir ou versionar os valores. Não substituir a chave existente: isso invalidaria a leitura dos tokens armazenados.
+
+Entrar no painel, abrir **Produtos e comparadores**, clicar **Conectar Mercado Livre**, autorizar e usar **Testar conexão**. A consulta de teste usa `/users/me`; seu sucesso confirma autorização e acesso básico, não o acesso a promoções, comissões ou geração de links. Esses recursos exigem validação específica posterior.
+
+Tokens são armazenados com AES-256-GCM na tabela privada settings do D1, fora do snapshot editorial. Transações são de uso único, vinculadas à sessão editorial e cookie HttpOnly, com expiração de dez minutos. O refresh token é atualizado no servidor sob trava de concorrência. Nenhum token é devolvido ao navegador. Revogação ou troca de credenciais pode exigir reconectar a conta.
 
 A configuração do cliente Google pertence ao proprietário; salvar a URI e realizar um login real continua sendo a validação final de identidade. Testes automatizados de OAuth usam identidades sintéticas e não equivalem a entrar na conta real.
