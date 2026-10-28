@@ -1,13 +1,11 @@
 "use client";
 import { useRef, useState } from "react";
-import dynamic from "next/dynamic";
 import {
   blankItem,
   blankQuote,
   brl,
   totals,
   reviewErrors,
-  quoteSchema,
   type Quote,
 } from "../../domain/quotes/model";
 import {
@@ -17,14 +15,9 @@ import {
   matchedEstimate,
   type Estimate,
 } from "../../domain/quotes/estimate";
-import { readQuotes, writeQuotes, withDocument } from "./storage";
 import { Field, NumberField } from "./QuoteFields";
 import { quoteSuggestionEndpoint, quoteSuggestionError } from "./quote-request";
 import styles from "./quotes.module.css";
-const Advanced = dynamic(
-  () => import("./AdvancedQuoteTool").then((m) => m.AdvancedQuoteTool),
-  { ssr: false },
-);
 const steps = ["Atendimento", "Valores", "Cliente e condições", "Revisão"];
 function initialQuote() {
   const q = blankQuote();
@@ -50,11 +43,9 @@ function initialQuote() {
 export function QuoteTool() {
   const [q, setQ] = useState<Quote>(initialQuote),
     [step, setStep] = useState(0),
-    [advanced, setAdvanced] = useState(false),
     [busy, setBusy] = useState(false),
     [message, setMessage] = useState(""),
-    [suggestion, setSuggestion] = useState<Estimate | null>(null),
-    [saved, setSaved] = useState<Quote[]>([]);
+    [suggestion, setSuggestion] = useState<Estimate | null>(null);
   const form = useRef<HTMLFormElement>(null),
     heading = useRef<HTMLHeadingElement>(null),
     generation = useRef(0);
@@ -183,46 +174,12 @@ export function QuoteTool() {
       setBusy(false);
     }
   }
-  function save() {
-    const invalid = Array.from(
-      form.current?.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>(
-        "input,textarea",
-      ) ?? [],
-    ).find((el) => !el.validity.valid && !el.validity.valueMissing);
-    if (invalid) {
-      invalid.reportValidity();
-      return;
-    }
-    try {
-      const next = withDocument(readQuotes(localStorage), quoteSchema.parse(q));
-      writeQuotes(localStorage, next);
-      setSaved(next);
-      setMessage("Orçamento salvo somente neste dispositivo.");
-    } catch {
-      setMessage(
-        "Não foi possível salvar: armazenamento cheio, bloqueado ou corrompido. Nada foi apagado.",
-      );
-    }
-  }
   function updateItem(id: string, patch: Partial<Quote["items"][number]>) {
     change((old) => ({
       ...old,
       items: old.items.map((i) => (i.id === id ? { ...i, ...patch } : i)),
     }));
   }
-  if (advanced)
-    return (
-      <Advanced
-        initialQuote={q}
-        onBack={(doc) => {
-          generation.current++;
-          setQ(doc);
-          setSuggestion(null);
-          setAdvanced(false);
-          setStep(0);
-        }}
-      />
-    );
   return (
     <div className={styles.tool}>
       <p className={styles.lead}>
@@ -713,7 +670,7 @@ export function QuoteTool() {
             {step < 3 && (
               <button className={styles.primary} disabled={busy} type="submit">
                 {step === 0
-                  ? "Continuar com valores manuais"
+                  ? "Prosseguir"
                   : step === 2
                     ? "Revisar orçamento"
                     : "Continuar"}
@@ -734,55 +691,6 @@ export function QuoteTool() {
           </p>
         </aside>
       </div>
-      <details className={styles.local}>
-        <summary>Salvar, abrir ou usar opções avançadas</summary>
-        <p>
-          Salvar é opcional e usa somente este navegador. Evite dispositivos
-          compartilhados.
-        </p>
-        <button onClick={save}>Salvar neste dispositivo</button>
-        <button
-          onClick={() => {
-            try {
-              setSaved(readQuotes(localStorage));
-              setMessage("Documentos locais carregados.");
-            } catch {
-              setMessage(
-                "Armazenamento indisponível ou corrompido. Nada foi apagado.",
-              );
-            }
-          }}
-        >
-          Abrir salvos
-        </button>
-        {saved.map((doc) => (
-          <p key={`${doc.id}-${doc.revision}-${doc.status}`}>
-            <button
-              onClick={() => {
-                if (
-                  window.confirm(
-                    "Abrir este documento e substituir as alterações em memória?",
-                  )
-                ) {
-                  generation.current++;
-                  setQ(doc);
-                  setSuggestion(null);
-                  move(0);
-                }
-              }}
-            >
-              {doc.documentNumber || "Sem número"} · revisão {doc.revision}
-            </button>
-          </p>
-        ))}
-        <p>
-          Importação e exportação JSON, impressão, peças, descontos percentuais
-          e snapshots continuam no editor avançado.
-        </p>
-        <button disabled={busy} onClick={() => setAdvanced(true)}>
-          Abrir editor avançado
-        </button>
-      </details>
     </div>
   );
 }

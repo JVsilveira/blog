@@ -165,30 +165,406 @@
     width: 43%;
   }
 }
-/* Fluxo simplificado: o atendimento vem antes dos dados do cliente. */
-.lead {max-width:68ch;color:var(--muted);font-size:18px;line-height:1.7;}
-.steps {display:flex;gap:20px;border-bottom:1px solid var(--border);padding:20px 0;margin-bottom:32px;flex-wrap:wrap;}
-.steps span {display:flex;align-items:center;gap:8px;color:var(--muted);font-size:14px;}
-.steps b {display:grid;place-items:center;border-radius:50%;width:28px;height:28px;background:var(--surface);}
-.steps [aria-current] {color:var(--primary);font-weight:700;}
-.steps [aria-current] b {background:var(--primary);color:white;}
-.layout {display:grid;grid-template-columns:minmax(0,1fr) 235px;gap:40px;align-items:start;}
-.layout h2 {margin-top:0;outline-offset:6px;}
-.tool .simpleFieldset {margin:0;padding:0;border:0;}
-.simpleFieldset .numbers {grid-template-columns:repeat(2,minmax(0,1fr));}
-.serviceEntry,.priceEntry {border-bottom:1px solid var(--border);padding:8px 0 20px;}
-.serviceEntry textarea {min-height:90px;}
-.hint {font-size:14px;color:var(--muted);line-height:1.6;}
-.aiBox {padding:20px 24px;background:var(--surface);border-left:3px solid var(--primary);margin-top:24px;}
-.aiBox h3 {margin-top:0;}
-.tool .primary {color:white;background:var(--primary);font-weight:600;}
-.side {position:sticky;top:24px;border-top:4px solid var(--primary);padding:22px;background:var(--surface);}
-.side .total {margin:14px 0;}
-.actions {display:flex;justify-content:space-between;gap:12px;margin-top:24px;flex-wrap:wrap;}
-.previewLine {display:flex;justify-content:space-between;gap:20px;padding:18px 0;border-bottom:1px solid var(--border);overflow-wrap:anywhere;}
-.previewLine small {display:block;color:var(--muted);margin-top:6px;}
-.previewLine strong {white-space:nowrap;}
-.proposal {line-height:1.7;}
-.proposal>p {overflow-wrap:anywhere;}
-.local summary,.simpleFieldset summary {cursor:pointer;font-weight:600;padding:12px 0;}
-@media(max-width:800px){.layout {grid-template-columns:1fr;gap:24px;}.side {position:static;}.steps {gap:12px;}.steps span {font-size:12px;}.simpleFieldset .numbers {grid-template-columns:1fr;gap:0;}.aiBox {padding:16px;}}
+/* Fluxo simplificado: uma proposta técnica clara, leve e responsiva. */
+.tool {
+  max-width: 1180px;
+  margin: 24px 0 72px;
+}
+.lead {
+  max-width: 64ch;
+  color: var(--muted);
+  font-size: clamp(16px, 1.7vw, 19px);
+  line-height: 1.65;
+  margin-bottom: 28px;
+}
+.steps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  padding: 8px;
+  margin-bottom: 28px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-panel);
+  background: var(--surface);
+}
+.steps span {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 10px;
+  padding: 10px 12px;
+  color: var(--muted);
+  border-radius: 11px;
+  font-size: 14px;
+  line-height: 1.25;
+}
+.steps b {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--background);
+  color: var(--muted);
+}
+.steps [aria-current] {
+  background: var(--background);
+  color: var(--primary);
+  font-weight: 700;
+  box-shadow: 0 1px 4px rgb(12 49 91 / 8%);
+}
+.steps [aria-current] b {
+  border-color: var(--primary-solid);
+  background: var(--primary-solid);
+  color: var(--on-primary);
+}
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 270px;
+  gap: clamp(22px, 3vw, 38px);
+  align-items: start;
+}
+.layout form {
+  min-width: 0;
+  padding: clamp(22px, 3.5vw, 40px);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--background);
+  box-shadow: 0 12px 36px rgb(12 49 91 / 7%);
+}
+.layout h2 {
+  margin-top: 0;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--border);
+  outline-offset: 6px;
+}
+.tool .simpleFieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.simpleFieldset .numbers {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+.tool label {
+  margin: 18px 0;
+  color: var(--text);
+  font-weight: 600;
+}
+.tool input,
+.tool textarea,
+.tool select {
+  min-height: 50px;
+  margin-top: 7px;
+  padding: 11px 13px;
+  border-color: #8797aa;
+  border-radius: 10px;
+  background: #fff;
+  font-weight: 400;
+  transition:
+    border-color var(--duration-feedback) var(--ease-feedback),
+    box-shadow var(--duration-feedback) var(--ease-feedback);
+}
+.tool input:hover,
+.tool textarea:hover,
+.tool select:hover {
+  border-color: var(--primary);
+}
+.tool input:focus,
+.tool textarea:focus,
+.tool select:focus {
+  border-color: var(--primary-solid);
+  box-shadow: 0 0 0 3px rgb(18 89 181 / 14%);
+  outline: none;
+}
+.tool textarea {
+  min-height: 108px;
+  resize: vertical;
+}
+.tool button {
+  min-height: 48px;
+  padding: 10px 18px;
+  margin: 6px 8px 6px 0;
+  border-radius: 10px;
+  font-weight: 650;
+  transition:
+    background var(--duration-feedback) var(--ease-feedback),
+    border-color var(--duration-feedback) var(--ease-feedback),
+    color var(--duration-feedback) var(--ease-feedback),
+    transform var(--duration-feedback) var(--ease-feedback);
+}
+.tool button:not(:disabled):hover {
+  border-color: var(--primary-hover);
+  background: var(--elevated);
+}
+.tool button:not(:disabled):active {
+  transform: translateY(1px);
+}
+.serviceEntry,
+.priceEntry {
+  margin: 18px 0;
+  padding: 18px 20px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+}
+.serviceEntry label,
+.priceEntry label {
+  margin-top: 0;
+}
+.serviceEntry textarea {
+  min-height: 96px;
+}
+.priceEntry h3 {
+  font-size: 18px;
+  overflow-wrap: anywhere;
+}
+.hint {
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.6;
+}
+.aiBox {
+  position: relative;
+  overflow: hidden;
+  margin: 20px 0 24px;
+  padding: 22px 24px;
+  border: 1px solid #bdd8f2;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #f3f8ff 0%, #eefbff 100%);
+}
+.aiBox::before {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: linear-gradient(var(--brand-blue), var(--brand-cyan));
+  content: "";
+}
+.aiBox h3 {
+  margin-top: 0;
+  font-size: 20px;
+}
+.aiBox p:last-of-type {
+  margin-bottom: 14px;
+}
+.tool .primary {
+  border-color: var(--primary-solid);
+  background: var(--primary-solid);
+  color: var(--on-primary);
+}
+.tool .primary:not(:disabled):hover {
+  border-color: var(--primary-hover);
+  background: var(--primary-hover);
+}
+.side {
+  position: sticky;
+  top: 24px;
+  overflow: hidden;
+  padding: 24px;
+  border: 1px solid #1a5da9;
+  border-radius: 18px;
+  background: linear-gradient(
+    155deg,
+    var(--brand-navy),
+    var(--header-background)
+  );
+  color: var(--on-primary);
+  box-shadow: 0 16px 32px rgb(12 49 91 / 16%);
+}
+.side::after {
+  position: absolute;
+  right: -38px;
+  bottom: -50px;
+  width: 130px;
+  height: 130px;
+  border: 20px solid rgb(0 183 223 / 18%);
+  border-radius: 50%;
+  content: "";
+  pointer-events: none;
+}
+.side > * {
+  position: relative;
+  z-index: 1;
+}
+.side > span {
+  font-size: 14px;
+  font-weight: 700;
+}
+.side .total {
+  margin: 12px 0 16px;
+  color: #fff;
+  font-size: clamp(28px, 3vw, 36px);
+}
+.side p {
+  margin-bottom: 12px;
+}
+.side .hint {
+  color: #d9e8f8;
+}
+.notice:not(:empty) {
+  margin: 22px 0 0;
+  padding: 14px 16px;
+  border: 1px solid #d9c18a;
+  border-left: 4px solid var(--warning);
+  border-radius: 10px;
+  background: #fffaf0;
+}
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 28px;
+  padding-top: 22px;
+  border-top: 1px solid var(--border);
+}
+.actions button {
+  min-width: 132px;
+  margin: 0;
+}
+.actions button:first-child:not(:last-child) {
+  margin-right: auto;
+}
+.previewLine {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--border);
+  overflow-wrap: anywhere;
+}
+.previewLine small {
+  display: block;
+  margin-top: 6px;
+  color: var(--muted);
+}
+.previewLine strong {
+  white-space: nowrap;
+}
+.proposal {
+  line-height: 1.7;
+}
+.proposal > p {
+  overflow-wrap: anywhere;
+}
+.simpleFieldset summary {
+  cursor: pointer;
+  padding: 12px 0;
+  font-weight: 600;
+}
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+  .side {
+    position: relative;
+    top: auto;
+    order: -1;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 2px 20px;
+    padding: 18px 22px;
+  }
+  .side .total {
+    grid-row: 1 / 3;
+    grid-column: 2;
+    align-self: center;
+    margin: 0;
+  }
+  .side .hint {
+    grid-column: 1 / -1;
+    margin: 8px 0 0;
+  }
+}
+@media (max-width: 640px) {
+  .tool {
+    margin-top: 16px;
+    margin-bottom: 48px;
+  }
+  .lead {
+    margin-bottom: 20px;
+  }
+  .steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-bottom: 18px;
+  }
+  .steps span {
+    padding: 8px;
+    font-size: 12px;
+  }
+  .steps b {
+    width: 27px;
+    height: 27px;
+  }
+  .layout {
+    gap: 16px;
+  }
+  .layout form {
+    padding: 20px 16px;
+    border-radius: 16px;
+  }
+  .simpleFieldset .numbers {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .serviceEntry,
+  .priceEntry,
+  .aiBox {
+    margin-inline: -2px;
+    padding: 16px;
+  }
+  .side {
+    display: block;
+  }
+  .side .total {
+    margin: 8px 0 10px;
+  }
+  .side .hint {
+    margin-top: 4px;
+  }
+  .actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .actions button {
+    width: 100%;
+    min-width: 0;
+  }
+  .actions button:only-child {
+    grid-column: 1 / -1;
+  }
+  .previewLine {
+    gap: 12px;
+  }
+}
+@media (max-width: 380px) {
+  .steps span {
+    gap: 6px;
+    padding-inline: 6px;
+  }
+  .steps b {
+    width: 24px;
+    height: 24px;
+  }
+  .layout form {
+    padding-inline: 13px;
+  }
+  .actions {
+    grid-template-columns: 1fr;
+  }
+  .actions button,
+  .actions button:only-child {
+    grid-column: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tool button,
+  .tool input,
+  .tool textarea,
+  .tool select {
+    transition: none;
+  }
+}
