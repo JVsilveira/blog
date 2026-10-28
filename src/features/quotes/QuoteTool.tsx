@@ -19,15 +19,13 @@ import {
 } from "../../domain/quotes/estimate";
 import { readQuotes, writeQuotes, withDocument } from "./storage";
 import { Field, NumberField } from "./QuoteFields";
+import { quoteSuggestionEndpoint, quoteSuggestionError } from "./quote-request";
 import styles from "./quotes.module.css";
 const Advanced = dynamic(
   () => import("./AdvancedQuoteTool").then((m) => m.AdvancedQuoteTool),
   { ssr: false },
 );
 const steps = ["Atendimento", "Valores", "Cliente e condições", "Revisão"];
-const api =
-  process.env.NEXT_PUBLIC_QUOTE_API_URL ||
-  "https://silfontech-admin.devsilveira.workers.dev/api/quotes/suggest";
 function initialQuote() {
   const q = blankQuote();
   return {
@@ -120,7 +118,7 @@ export function QuoteTool() {
           description: i.description,
         })),
       });
-      const response = await fetch(api, {
+      const response = await fetch(quoteSuggestionEndpoint, {
         method: "POST",
         credentials: "omit",
         redirect: "error",
@@ -158,11 +156,7 @@ export function QuoteTool() {
         "Sugestões aplicadas. Confira cada valor e ajuste como preferir.",
       );
     } catch (error) {
-      setMessage(
-        error instanceof Error
-          ? error.message
-          : "Não foi possível sugerir os valores. Continue manualmente.",
-      );
+      setMessage(quoteSuggestionError(error));
     } finally {
       setBusy(false);
     }
@@ -399,26 +393,6 @@ export function QuoteTool() {
               >
                 + Adicionar serviço
               </button>
-              <div className={styles.aiBox}>
-                <h3>Uma referência para começar</h3>
-                <p>
-                  O Gemini considera o serviço, a modalidade e o porte da
-                  cidade. A sugestão não é uma pesquisa atual de preços.
-                </p>
-                <p className={styles.hint}>
-                  Ao solicitar, somente estas descrições técnicas e opções serão
-                  enviadas ao Google. No nível gratuito, o conteúdo pode ser
-                  usado para melhorar os produtos do Google.
-                </p>
-                <button
-                  className={styles.primary}
-                  type="button"
-                  disabled={busy}
-                  onClick={() => void suggest()}
-                >
-                  {busy ? "Analisando…" : "Sugerir valores com IA"}
-                </button>
-              </div>
             </fieldset>
           )}
           {step === 1 && (
@@ -428,6 +402,30 @@ export function QuoteTool() {
                 nova sugestão.
               </p>
               <fieldset disabled={busy} className={styles.simpleFieldset}>
+                <div className={styles.aiBox}>
+                  <h3>Uma referência para começar</h3>
+                  <p>
+                    O Gemini considera o serviço, a modalidade e o porte da
+                    cidade. A sugestão não é uma pesquisa atual de preços.
+                  </p>
+                  <p className={styles.hint}>
+                    Ao solicitar, somente as descrições técnicas e as opções do
+                    atendimento serão enviadas ao Google. No nível gratuito, o
+                    conteúdo pode ser usado para melhorar os produtos do Google.
+                  </p>
+                  <button
+                    className={styles.primary}
+                    type="button"
+                    disabled={busy}
+                    onClick={() => void suggest()}
+                  >
+                    {busy
+                      ? "Analisando…"
+                      : suggestion
+                        ? "Sugerir valores novamente"
+                        : "Sugerir valores com IA"}
+                  </button>
+                </div>
                 {q.items.map((item, n) => (
                   <div key={item.id} className={styles.priceEntry}>
                     <h3>
@@ -473,17 +471,12 @@ export function QuoteTool() {
                 {suggestion && (
                   <p className={styles.notice}>{suggestion.assumptions}</p>
                 )}
-                <button
-                  type="button"
-                  disabled={busy}
-                  onClick={() => void suggest()}
-                >
-                  {busy ? "Analisando…" : "Sugerir valores novamente"}
-                </button>
-                <p className={styles.hint}>
-                  Uma nova sugestão substitui os valores atuais. Se preferir,
-                  mantenha os seus.
-                </p>
+                {suggestion && (
+                  <p className={styles.hint}>
+                    Uma nova sugestão substitui os valores atuais. Se preferir,
+                    mantenha os seus.
+                  </p>
+                )}
                 <NumberField
                   label="Desconto (R$)"
                   value={
