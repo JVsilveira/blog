@@ -8,6 +8,10 @@
   "workers_dev": true,
   "routes": [
     {
+      "pattern": "silfontech.com.br/api/quotes/*",
+      "zone_name": "silfontech.com.br"
+    },
+    {
       "pattern": "api.silfontech.com.br",
       "custom_domain": true,
     },

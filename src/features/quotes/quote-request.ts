@@ -1,6 +1,5 @@
 export const quoteSuggestionEndpoint =
-  process.env.NEXT_PUBLIC_QUOTE_API_URL ||
-  "https://api.silfontech.com.br/api/quotes/suggest";
+  process.env.NEXT_PUBLIC_QUOTE_API_URL || "/api/quotes/suggest";
 
 export function quoteSuggestionError(error: unknown) {
   if (error instanceof DOMException && error.name === "TimeoutError") {

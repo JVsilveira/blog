@@ -5,10 +5,8 @@ import {
 } from "../src/features/quotes/quote-request";
 
 describe("requisição de sugestão do orçamento", () => {
-  it("usa o domínio próprio do SilfonTech por padrão", () => {
-    expect(quoteSuggestionEndpoint).toBe(
-      "https://api.silfontech.com.br/api/quotes/suggest",
-    );
+  it("usa a mesma origem do SilfonTech por padrão", () => {
+    expect(quoteSuggestionEndpoint).toBe("/api/quotes/suggest");
   });
 
   it("traduz falhas de rede e tempo limite sem mostrar Failed to fetch", () => {
