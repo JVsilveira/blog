@@ -6,7 +6,7 @@ import {mercadoAccess,resolveMercadoLink} from './mercadolivre';
 import type {Env} from './types';
 
 const prefix='recommendation:';
-const snapshotSchema=recommendationCardSchema.extend({lastError:z.string().nullable().optional()});
+const snapshotSchema=recommendationCardSchema.extend({lastError:z.string().nullable().optional(),providerDomain:z.string().nullable().optional()});
 export const recommendationAction=z.discriminatedUnion('action',[
  z.object({action:z.literal('add'),link:mercadoLink,productUrl:mercadoLink.optional()}),
  z.object({action:z.literal('refresh')}),
@@ -14,20 +14,21 @@ export const recommendationAction=z.discriminatedUnion('action',[
 ]);
 type Stored=z.infer<typeof snapshotSchema>;
 const finitePrice=(value:unknown)=>typeof value==='number'&&Number.isFinite(value)&&value>0&&Number.isSafeInteger(Math.round(value*100))?Math.round(value*100):null;
-async function api(path:string,token:string){
+export async function recommendationApi(path:string,token:string){
  const response=await fetch('https://api.mercadolibre.com'+path,{headers:{Authorization:'Bearer '+token},redirect:'manual',signal:AbortSignal.timeout(12000)});
  if(!response.ok)throw new AdminError(response.status===403?'A API não liberou esta consulta.':response.status===404?'Produto não encontrado na loja.':'A loja não respondeu. Tente novamente.',response.status===404?404:502);
  const reader=response.body?.getReader();if(!reader)throw new AdminError('Resposta vazia da loja.',502);const parts:Uint8Array[]=[];let total=0;
  while(true){const next=await reader.read();if(next.done)break;total+=next.value.length;if(total>1500000){await reader.cancel();throw new AdminError('Resposta da loja acima do limite.',502);}parts.push(next.value);}
  return JSON.parse(Buffer.concat(parts).toString('utf8')) as Record<string,unknown>;
 }
+const api=recommendationApi;
 const record=(value:unknown):Record<string,unknown>|null=>value&&typeof value==='object'&&!Array.isArray(value)?value as Record<string,unknown>:null;
 async function readRows(env:Env){return (await env.DB.prepare('SELECT key,value FROM settings WHERE key LIKE ? ORDER BY key').bind(prefix+'%').all<{key:string;value:string}>()).results;}
 export async function listRecommendations(env:Env,privateView=false){
  const now=Date.now();const items=(await readRows(env)).map(row=>snapshotSchema.parse(JSON.parse(row.value)));
  return {items:items.filter(item=>privateView||item.state==='active').map(item=>{if(privateView)return item;const checked=recommendationCardSchema.parse(item);return {...checked,price:currentPrice(checked,now)};})};
 }
-async function snapshot(env:Env,id:string,catalog:boolean,link:string,token:string):Promise<Stored>{
+export async function snapshotRecommendation(env:Env,id:string,catalog:boolean,link:string,token:string):Promise<Stored>{
  const detail=await api((catalog?'/products/':'/items/')+id,token);
  if(detail.id!==id)throw new AdminError('A loja retornou outro produto.',502);
  const now=new Date().toISOString();
@@ -51,8 +52,9 @@ async function snapshot(env:Env,id:string,catalog:boolean,link:string,token:stri
  if(itemId){try{const body=await api('/items/'+itemId+'/sale_price?context=channel_marketplace',token);const amount=body.currency_id==='BRL'?finitePrice(body.amount):null;if(amount){const regular=finitePrice(body.regular_amount);price={amountCents:amount,regularCents:regular&&regular>amount?regular:null,currency:'BRL',itemId,observedAt:now,expiresAt:new Date(Date.parse(now)+3*3600000).toISOString(),source:'sale_price',scope:catalog?'catalog_from':'linked_item'};}}catch{lastError='Preço individual indisponível na API.';}
   if(!price&&catalogAmount){price={amountCents:catalogAmount,regularCents:catalogRegular,currency:'BRL',itemId,observedAt:now,expiresAt:new Date(Date.parse(now)+3*3600000).toISOString(),source:'catalog_items',scope:'catalog_from'};lastError=null;}
  }
- return snapshotSchema.parse({id,catalogId,affiliateUrl:link,name,category,image,facts,state:detail.status==='active'?'active':'unavailable',checkedAt:now,price,lastError});
+ return snapshotSchema.parse({id,catalogId,affiliateUrl:link,name,category,image,facts,state:detail.status==='active'?'active':'unavailable',checkedAt:now,price,lastError,providerDomain:typeof detail.domain_id==='string'?detail.domain_id:null});
 }
+const snapshot=snapshotRecommendation;
 export async function manageRecommendations(env:Env,input:unknown){
  const action=recommendationAction.parse(input);
  if(action.action==='refresh'){await refreshRecommendations(env);return listRecommendations(env,true);}

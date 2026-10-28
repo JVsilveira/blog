@@ -10,6 +10,7 @@ import {publish,lastPublish} from '../cloud-admin/src/publish';
 import {beginMercado,finishMercado,mercadoAccess,mercadoStatus,probeMercado,resolveMercadoLink} from '../cloud-admin/src/mercadolivre';
 import type {Database,Statement,Env} from '../cloud-admin/src/types';
 import {manageRecommendations,listRecommendations,refreshRecommendations} from '../cloud-admin/src/recommendations';
+import {discoverRecommendations,discoveredRecommendations} from '../cloud-admin/src/recommendation-discovery';
 let sqlite:DatabaseSync,env:Env;
 class Query implements Statement{
  values:unknown[]=[];
@@ -86,6 +87,33 @@ it('recusa importação anônima, CSRF inválido e links de produtos diferentes'
  expect((await worker.fetch(request('/api/recommendations'),env)).status).toBe(401);
  const headers=session();expect((await worker.fetch(request('/api/recommendations',{method:'POST',headers:{...headers,'X-CSRF-Token':'wrong'},body:JSON.stringify({action:'refresh'})}),env)).status).toBe(403);
  await expect(manageRecommendations(env,{action:'add',link:'https://www.mercadolivre.com.br/p/MLB123456',productUrl:'https://www.mercadolivre.com.br/p/MLB999999'})).rejects.toBeTruthy();
+});
+it('descobre e prioriza candidatos reais sem fabricar link de afiliado ou publicar links comuns',async()=>{
+ await connectedMercado();const provider=recommendationProvider();
+ vi.stubGlobal('fetch',vi.fn(async(input:RequestInfo|URL)=>String(input).includes('/products/search?')?Response.json({results:[{id:'MLB123456'},{id:'MLB123456'},{id:'invalid'}]}):provider(input)));
+ const found=await discoverRecommendations(env);expect(found.items).toHaveLength(1);expect(found.items[0]).toMatchObject({id:'MLB123456',discount:20,affiliateReady:false,productUrl:'https://www.mercadolivre.com.br/p/MLB123456'});expect(found.publication).toBe('requires_affiliate_link');expect(found.state.cursor).toBe(1);
+ expect((await listRecommendations(env)).items).toHaveLength(0);
+ expect((await worker.fetch(request('/api/recommendation-discovery'),env)).status).toBe(401);
+ const exported=await (await worker.fetch(request('/internal/export',{headers:{Authorization:'Bearer export-secret'}}),env)).text();expect(exported).not.toContain('Produto sintético de teste');expect(exported).not.toContain('private-access');
+ const foundAgain=await discoverRecommendations(env);expect(foundAgain.items).toHaveLength(1);
+});
+it('não transforma candidatos em afiliados e retira da fila os produtos já vinculados pelo proprietário',async()=>{
+ await connectedMercado();const provider=recommendationProvider();vi.stubGlobal('fetch',vi.fn(async(input:RequestInfo|URL)=>String(input).includes('/products/search?')?Response.json({results:[{id:'MLB123456'}]}):provider(input)));
+ await discoverRecommendations(env);await manageRecommendations(env,{action:'add',link:'https://www.mercadolivre.com.br/p/MLB123456?matt_tool=123'});
+ expect((await discoveredRecommendations(env)).items).toHaveLength(0);
+ expect((await listRecommendations(env)).items[0]?.affiliateUrl).toContain('matt_tool=123');
+});
+it('registra falha de descoberta sem inventar candidatos ou substituir a vitrine',async()=>{
+ await connectedMercado();vi.stubGlobal('fetch',vi.fn(async()=>Response.json({error:'unavailable'},{status:503})));
+ await expect(discoverRecommendations(env)).rejects.toMatchObject({status:502});const found=await discoveredRecommendations(env);expect(found.items).toHaveLength(0);expect(found.state.error).toBeTruthy();expect((await listRecommendations(env)).items).toHaveLength(0);
+});
+it('não confunde processador de computador com processador de alimentos',async()=>{
+ await connectedMercado();sqlite.prepare('INSERT INTO settings(key,value) VALUES(?,?)').run('recommendation-discovery',JSON.stringify({cursor:6,lastRun:null,lastAdded:0,error:null}));
+ const provider=recommendationProvider();vi.stubGlobal('fetch',vi.fn(async(input:RequestInfo|URL)=>{
+  const url=String(input);if(url.includes('/products/search?'))return Response.json({results:[{id:'MLB123456'}]});
+  if(new URL(url).pathname==='/products/MLB123456')return Response.json({id:'MLB123456',name:'Processador de alimentos sintético',status:'active',domain_id:'MLB-FOOD_PROCESSORS',pictures:[{url:'https://http2.mlstatic.com/test.jpg'}],attributes:[]});return provider(input);
+ }));
+ expect((await discoverRecommendations(env)).items).toHaveLength(0);
 });
 it('resolve link curto com GET quando HEAD não é aceito, sem encaminhar tokens ou aceitar outra loja',async()=>{
  const fetcher=vi.fn().mockResolvedValueOnce(new Response(null,{status:405})).mockResolvedValueOnce(new Response(null,{status:302,headers:{Location:'https://www.mercadolivre.com.br/produto/p/MLB123456?wid=MLB987654321'}}));vi.stubGlobal('fetch',fetcher);

@@ -8,6 +8,7 @@ import {lastPublish,publish} from './publish';
 import {mercadoCookie,mercadoStatus,beginMercado,finishMercado,testMercado,probeMercado} from './mercadolivre';
 import type {Env,Context} from './types';
 import {listRecommendations,manageRecommendations,refreshRecommendations} from './recommendations';
+import {discoverRecommendations,discoveredRecommendations} from './recommendation-discovery';
 const security={'Cache-Control':'private, no-store','X-Robots-Tag':'noindex, nofollow','X-Frame-Options':'DENY','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer'};
 const json=(value:unknown,status=200)=>Response.json(value,{status,headers:security});
 const redirect=(location:string,values:string[]=[])=>{const headers=new Headers({...security,Location:location});for(const c of values)headers.append('Set-Cookie',c);return new Response(null,{status:303,headers});};
@@ -42,6 +43,10 @@ async function handle(request:Request,env:Env){
   if(!env.MERCADOLIVRE_DIAGNOSTIC_TOKEN||!equal(request.headers.get('Authorization')??'','Bearer '+env.MERCADOLIVRE_DIAGNOSTIC_TOKEN))return json({error:'Acesso recusado.'},401);
   return json(await manageRecommendations(env,await limitedJSON(request,8192)));
  }
+ if(path==='/internal/recommendation-discovery'&&request.method==='POST'){
+  if(!env.MERCADOLIVRE_DIAGNOSTIC_TOKEN||!equal(request.headers.get('Authorization')??'','Bearer '+env.MERCADOLIVRE_DIAGNOSTIC_TOKEN))return json({error:'Acesso recusado.'},401);
+  return json(await discoverRecommendations(env));
+ }
  if(path==='/internal/export'&&request.method==='GET'){
   const auth=request.headers.get('Authorization')??'';if(!env.EDITORIAL_EXPORT_TOKEN||!equal(auth,'Bearer '+env.EDITORIAL_EXPORT_TOKEN))return json({error:'Acesso recusado.'},401);
   return json({...await readWorkspace(env.DB),recommendations:await listRecommendations(env)});
@@ -65,6 +70,7 @@ async function handle(request:Request,env:Env){
   return html('<div id="root" role="status">Carregando painel…</div><script type="module" src="/assets/main.js"></script>');
  }
  const session=await requireSession(env,request);
+ if(path==='/api/recommendation-discovery'&&request.method==='GET')return json(await discoveredRecommendations(env));
  if(path==='/api/recommendations'&&request.method==='GET')return json(await listRecommendations(env,true));
  if(path==='/auth/mercadolivre/callback'&&request.method==='GET'){
   const clear=cookie(mercadoCookie,'',0);
@@ -76,6 +82,7 @@ async function handle(request:Request,env:Env){
  if(path==='/api/build'&&request.method==='GET')return json({job:await lastPublish(env)});
  if(request.method==='POST'){
   checkMutation(env,request,session);await rateLimit(env,request,'mutation',30);
+  if(path==='/api/recommendation-discovery')return json(await discoverRecommendations(env));
   if(path==='/api/recommendations')return json(await manageRecommendations(env,await limitedJSON(request,8192)));
   if(path==='/auth/mercadolivre'){const result=await beginMercado(env,session);return jsonWithCookie({url:result.url},cookie(mercadoCookie,result.browserToken,600));}
   if(path==='/api/hardware/mercadolivre/test')return json(await testMercado(env));
@@ -99,7 +106,11 @@ const worker={
    response.headers.set('Access-Control-Allow-Origin',request.headers.get('Origin')!);response.headers.set('Vary','Origin');response.headers.set('Access-Control-Allow-Methods','POST, OPTIONS');response.headers.set('Access-Control-Allow-Headers','Content-Type');response.headers.set('Cache-Control','no-store');
   }return response;
  },
- async scheduled(_event:unknown,env:Env,ctx:Context){ctx.waitUntil(Promise.allSettled([refreshRecommendations(env),env.DB.batch([env.DB.prepare('DELETE FROM auth_records WHERE expires<?').bind(Date.now()),env.DB.prepare('DELETE FROM rate_limits WHERE expires<?').bind(Date.now()),env.DB.prepare('DELETE FROM editorial_history WHERE id IN (SELECT id FROM editorial_history ORDER BY id DESC LIMIT -1 OFFSET 1000)')])]));},
+ async scheduled(_event:unknown,env:Env,ctx:Context){ctx.waitUntil((async()=>{
+  // Sequência evita disputar a renovação do refresh token entre as duas tarefas.
+  for(const task of [refreshRecommendations,discoverRecommendations]){try{await task(env);}catch{/* A próxima execução retoma; sem logs de tokens ou dados privados. */}}
+  await env.DB.batch([env.DB.prepare('DELETE FROM auth_records WHERE expires<?').bind(Date.now()),env.DB.prepare('DELETE FROM rate_limits WHERE expires<?').bind(Date.now()),env.DB.prepare('DELETE FROM editorial_history WHERE id IN (SELECT id FROM editorial_history ORDER BY id DESC LIMIT -1 OFFSET 1000)')]);
+ })());},
 };
 
 export default worker;
