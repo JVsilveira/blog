@@ -1,19 +1,19 @@
-/* SilfonTech: fundação editorial inspirada no Ghost Source.
+/* SilfonTech: sistema editorial sóbrio.
    Contratos e decisões de uso em docs/design-system.md. */
 :root {
   color-scheme: light;
-  --brand-navy: #0c315b;
-  --brand-blue: #1259b5;
-  --brand-cyan: #00b7df;
+  --brand-navy: #17324d;
+  --brand-blue: #245ca6;
+  --brand-cyan: #245ca6;
   --background: #ffffff;
-  --surface: #f3f7fc;
-  --elevated: #e7eff9;
-  --text: #14263d;
-  --muted: #4c6079;
-  --border: #d7e3ef;
-  --primary: #124f96;
-  --primary-solid: #1259b5;
-  --primary-hover: #0d4287;
+  --surface: #f5f6f8;
+  --elevated: #edf0f4;
+  --text: #202b38;
+  --muted: #566271;
+  --border: #dce1e7;
+  --primary: #215493;
+  --primary-solid: #215493;
+  --primary-hover: #173e70;
   --on-primary: #ffffff;
   --success: #166534;
   --warning: #854d0e;
@@ -21,18 +21,18 @@
   --control-border: #5e6d82;
   --focus: #1259b5;
   --selection: #0d4287;
-  --header-background: #174a93;
-  --header-hover: #123d7a;
-  --header-text: #ffffff;
-  --focus-inverse: #ffffff;
+  --header-background: #ffffff;
+  --header-hover: #edf0f4;
+  --header-text: #202b38;
+  --focus-inverse: #215493;
   --font-body: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-editorial: Georgia, "Times New Roman", serif;
   --text-small: 0.875rem;
   --text-body: 1.0625rem;
   --text-reading: 1.125rem;
   --text-intro: 1.1875rem;
-  --text-title: clamp(2rem, 4.2vw, 3.5rem);
-  --leading-body: 1.7;
+  --text-title: clamp(2rem, 3.8vw, 3rem);
+  --leading-body: 1.65;
   --leading-reading: 1.75;
   --leading-heading: 1.16;
   --weight-medium: 600;
@@ -45,15 +45,15 @@
   --space-8: 32px;
   --space-12: 48px;
   --space-16: 64px;
-  --content-width: 1280px;
+  --content-width: 1200px;
   --reading-width: 72ch;
   --page-gutter: clamp(16px, 3vw, 48px);
   --section-space: clamp(32px, 5vw, 64px);
   --layout-gap: clamp(24px, 3.2vw, 48px);
-  --radius: 12px;
-  --radius-control: 12px;
-  --radius-panel: 16px;
-  --radius-pill: 999px;
+  --radius: 8px;
+  --radius-control: 6px;
+  --radius-panel: 10px;
+  --radius-pill: 6px;
   --control-height: 48px;
   --duration-feedback: 150ms;
   --ease-feedback: ease-out;

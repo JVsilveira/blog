@@ -12,7 +12,10 @@ export function LanguageChoice({locale,links,automatic=false}:{locale:Locale;lin
   const target=saved && isLocale(saved)?saved:preferredLocale(navigator.languages);
   if(target!=='pt')window.location.replace(homePath(target));
  },[automatic,pathname]);
- return <nav className="language-choice" aria-label={copy[locale].choose}>
+ return <details className="language-picker">
+  <summary aria-label={copy[locale].choose}>{({pt:"PT",en:"EN",es:"ES"})[locale]}</summary>
+  <nav className="language-choice" aria-label={copy[locale].choose}>
   {(['pt','en','es'] as const).map(language=>links[language] ? <a key={language} href={links[language]} lang={language==='pt'?'pt-BR':language} hrefLang={language==='pt'?'pt-BR':language} aria-current={language===locale?'page':undefined} onClick={()=>{try{writeLanguagePreference(localStorage,language);}catch{}}}>{({pt:'Português',en:'English',es:'Español'})[language]}</a>:null)}
- </nav>;
+ </nav>
+ </details>;
 }

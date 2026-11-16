@@ -99,3 +99,15 @@ O proprietário esclareceu que a redução percebida era da área azul, não do 
 ### Logotipo vetorial colorido no cabeçalho
 
 Após o proprietário apontar perda de cor/nitidez, retirado o filtro monocromático. A marca principal passa a SVG derivado deterministicamente dos contornos do PNG fornecido, com traçado Potrace e preenchimentos navy/azul/ciano; nenhuma fonte substituída nem imagem gerada por IA. Eliminadas pequenas regiões de ruído na extração de contornos e preservado o PNG original. ViewBox ajustado ao desenho, dimensões intrínsecas 2050×470 e object-fit contain evitam corte/deformação. O cabeçalho azul permanece com sua altura original; base branca restrita ao logotipo garante contraste sem tornar a marca branca. O mesmo tratamento vale para o painel; login/rodapé seguem coloridos sem base adicional. Capa social passa a incorporar a fonte SVG. Arquivo vetorial com aproximadamente 8,5 KB, em vez do PNG de aproximadamente 434 KB usado antes.
+
+## Revisão visual de 16/11/2026 — direção vigente
+
+Esta revisão substitui a direção decorativa anterior. Cabeçalho branco com assinatura original sem placa, texto grafite #202B38, azul de ação #215493, superfícies cinza #F5F6F8 e divisórias #DCE1E7. Fonte de sistema para interface e Georgia somente para leitura editorial. Títulos fluidos de 32 a 48px; largura geral 1200px. Tokens efetivos em src/styles/tokens.css prevalecem sobre tabelas históricas acima.
+
+Controles com raio 6px, painéis 10px e altura interativa preservada. Idiomas em seletor compacto, resultados sem cápsula decorativa. Artigos com divisórias e hierarquia, em vez de caixas iguais. Ferramentas e orçamento seguem superfícies neutras; gradientes, grades e círculos decorativos removidos. Sombras restritas a popups quando necessárias para sobreposição; sem elevação animada dos cards. Sem emojis, novas frases promocionais, fontes remotas ou biblioteca visual. Ícones vetoriais funcionais existentes preservados.
+
+Arquivos: tokens.css, globals.css, recommendations.css e quotes.module.css. Não alterar estilos de impressão para acompanhar cores de interface: PDF permanece documento independente. Nenhum contrato, dado editorial, rota, integração ou regra de cálculo foi alterado.
+
+### Idiomas — acesso secundário
+
+Seleção recolhida por padrão em controle nativo details/summary com sigla PT/EN/ES. Nome acessível localizado; lista com nomes completos e idioma atual disponível ao abrir. Mantidos links por tradução e persistência existentes, sem ícones/bandeiras ou dependência nova.
