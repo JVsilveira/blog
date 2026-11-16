@@ -111,3 +111,7 @@ Arquivos: tokens.css, globals.css, recommendations.css e quotes.module.css. Não
 ### Idiomas — acesso secundário
 
 Seleção recolhida por padrão em controle nativo details/summary com sigla PT/EN/ES. Nome acessível localizado; lista com nomes completos e idioma atual disponível ao abrir. Mantidos links por tradução e persistência existentes, sem ícones/bandeiras ou dependência nova.
+
+### Painel editorial — 16/11/2026
+
+admin/app/admin.css consome os mesmos tokens do site, compartilhado pelo Next local e bundle do painel online. Cabeçalho branco sem placa na assinatura, navegação discreta, largura 1280px, painéis com borda leve e raios dos tokens. Navegação lateral fixa durante rolagem apenas no desktop; mobile mantém quebra de controles. Prévia com parágrafos justificados, última linha no início e hifenização automática; método/evidências/limitações com white-space pre-line. Campos de edição continuam textareas nativas, sem alterar armazenamento, validações, permissões ou publicação.

@@ -1994,3 +1994,13 @@ textarea {
   .publication-hero { position: relative; padding-right: 56px; }
   .publication-hero .language-picker { position: absolute; right: 0; top: 12px; }
 }
+
+/* Formatação editorial: parágrafos justificados e campos livres com Enter. */
+.article-body p {
+  text-align: justify;
+  text-align-last: start;
+  hyphens: auto;
+}
+.article-page .reading-note p {
+  white-space: pre-line;
+}

@@ -57,7 +57,7 @@ h3 {
   letter-spacing: -0.025em;
 }
 h1 {
-  font-size: clamp(30px, 3.6vw, 46px);
+  font-size: var(--text-title);
 }
 h2 {
   font-size: 25px;
@@ -133,7 +133,7 @@ p {
   margin-bottom: 0;
 }
 .admin-header {
-  border-top: 3px solid var(--brand-blue);
+  border-top: 0;
   border-bottom: 1px solid var(--border);
   background: var(--header-background);
   color: var(--header-text);
@@ -141,12 +141,12 @@ p {
   align-items: center;
   justify-content: space-between;
   gap: 24px;
-  padding: 20px max(24px, calc((100vw - 1440px) / 2));
+  padding: 20px max(24px, calc((100vw - 1280px) / 2));
 }
 .admin-brand {
   font-size: 22px;
 }
-.admin-brand .brand-logo { background: var(--background); padding: 8px 10px; border-radius: 6px; }
+.admin-brand .brand-logo { padding: 0; }
 .admin-brand span {
   color: var(--header-text);
   display: block;
@@ -175,7 +175,7 @@ p {
   width: 48px;
   height: 48px;
   overflow: hidden;
-  border: 2px solid var(--header-text);
+  border: 1px solid var(--border);
   border-radius: 50%;
   background: var(--elevated);
   color: var(--primary);
@@ -206,15 +206,15 @@ p {
 .admin-shell {
   display: grid;
   grid-template-columns: 200px minmax(0, 1fr);
-  width: min(100% - 48px, 1440px);
+  width: min(100% - 48px, 1280px);
   margin: auto;
-  gap: 40px;
+  gap: 24px;
 }
 .admin-nav {
   padding-block: 40px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 6px;
   align-items: stretch;
 }
 .admin-nav button {
@@ -338,7 +338,7 @@ legend {
 .badge {
   display: inline-flex;
   padding: 4px 12px;
-  border-radius: 8px;
+  border-radius: var(--radius-control);
   background: var(--elevated);
   color: var(--primary);
   font-size: 14px;
@@ -350,7 +350,8 @@ legend {
   margin-bottom: 32px;
 }
 .preview {
-  max-width: 76ch;
+  max-width: var(--reading-width);
+  margin-inline: auto;
 }
 .preview > h2 {
   font-size: clamp(30px, 4vw, 44px);
@@ -401,7 +402,7 @@ legend {
     justify-content: space-between;
     gap: 16px;
     padding-top: 16px;
-    border-top: 1px solid var(--header-text);
+    border-top: 1px solid var(--border);
   }
   .account-avatar {
     flex-basis: 40px;
@@ -479,3 +480,25 @@ legend {
 .hardware-specs dd { margin:8px 0; }
 @media(max-width:650px){.hardware-review{padding:16px;}.hardware-toolbar{align-items:stretch;}.hardware-actions button{max-width:100%;}}
 .hardware-statistics{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin:24px 0}.hardware-statistics section{background:var(--surface,#f3f6fb);border:1px solid var(--border,#dbe3ed);border-radius:12px;padding:20px}.hardware-statistics h2{font-size:1rem;margin-top:0}.hardware-statistics strong{font-size:1.8rem}.hardware-manager progress{width:min(100%,600px);height:16px}
+
+/* Prévia editorial usa as mesmas regras de leitura do site público. */
+.preview .article-body p {
+  text-align: justify;
+  text-align-last: start;
+  hyphens: auto;
+}
+.preview .notice p {
+  white-space: pre-line;
+}
+.admin-nav button { min-height: 48px; }
+.admin-nav [aria-current] { font-weight: 700; }
+.account-email, .admin-brand span { color: var(--muted); }
+input:disabled, select:disabled, textarea:disabled { color: var(--muted); background: var(--surface); }
+input[aria-invalid="true"], select[aria-invalid="true"], textarea[aria-invalid="true"] { border-color: var(--danger); }
+.post-title { color: var(--primary); }
+.preview .article-body img { max-width: 100%; height: auto; }
+@media (min-width: 901px) {
+  .admin-shell { align-items: start; padding-block: 24px; }
+  .admin-nav { position: sticky; top: 24px; padding-block: 8px; }
+  main:not(.login-page) { border: 1px solid var(--border); border-radius: var(--radius-panel); }
+}
