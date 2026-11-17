@@ -1,3 +1,5 @@
+import assetVersion from '../asset-version.json';
+import {validationMessage} from '../../admin/lib/validation-message';
 import {z} from 'zod';
 import {suggestQuote,QuoteAIError} from './quote-ai';
 import {AdminError} from '../../admin/lib/config';
@@ -18,7 +20,7 @@ async function limitedJSON(request:Request,maxBytes=512*1024){
  while(true){const part=await reader.read();if(part.done)break;size+=part.value.length;if(size>maxBytes){await reader.cancel();throw new AdminError('Conteúdo acima do limite permitido.',413);}chunks.push(part.value);}
  try{return JSON.parse(Buffer.concat(chunks).toString('utf8')) as unknown;}catch{throw new AdminError('JSON inválido.');}
 }
-function html(content:string){return new Response('<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Área editorial | SilfonTech</title><link rel="icon" href="/icon.svg"><link rel="stylesheet" href="/assets/main.css"></head><body>'+content+'</body></html>',{headers:{...security,'Referrer-Policy':'same-origin','Content-Type':'text/html; charset=utf-8'}});}
+function html(content:string){return new Response('<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Área editorial | SilfonTech</title><link rel="icon" href="/icon.svg"><link rel="stylesheet" href="/assets/main-'+assetVersion.version+'.css"></head><body>'+content+'</body></html>',{headers:{...security,'Referrer-Policy':'same-origin','Content-Type':'text/html; charset=utf-8'}});}
 async function handle(request:Request,env:Env){
  const url=new URL(request.url),path=url.pathname;
  if(path==='/api/recommendations'&&request.method==='GET'&&(url.hostname==='api.silfontech.com.br'||url.origin===env.PUBLIC_SITE_URL)){
@@ -31,7 +33,7 @@ async function handle(request:Request,env:Env){
   await rateLimit(env,request,'quote-minute',2);
   return json(await suggestQuote(await limitedJSON(request,16384),env,request.headers.get('CF-Connecting-IP')??'unknown',request.signal));
  }
- if(request.method==='GET'&&(path.startsWith('/assets/')||path.startsWith('/brand/')||path==='/icon.svg'))return env.ASSETS.fetch(request);
+ if(request.method==='GET'&&(path.startsWith('/assets/')||path.startsWith('/brand/')||path==='/icon.svg')){const asset=await env.ASSETS.fetch(request);const response=new Response(asset.body,asset);response.headers.set('Cache-Control','no-cache, must-revalidate');return response;}
  if(url.origin!==env.EDITORIAL_ORIGIN)return redirect(env.EDITORIAL_ORIGIN+(path==='/login'?'/login':'/'));
  if(path==='/internal/mercadolivre/probe'&&request.method==='POST'){
   if(!env.MERCADOLIVRE_DIAGNOSTIC_TOKEN||!equal(request.headers.get('Authorization')??'','Bearer '+env.MERCADOLIVRE_DIAGNOSTIC_TOKEN))return json({error:'Acesso recusado.'},401);
@@ -67,7 +69,7 @@ async function handle(request:Request,env:Env){
  }
  if(path==='/'&&request.method==='GET'){
   if(!await readSession(env,request))return redirect('/login');
-  return html('<div id="root" role="status">Carregando painel…</div><script type="module" src="/assets/main.js"></script>');
+  return html('<div id="root" role="status">Carregando painel…</div><script type="module" src="/assets/main-'+assetVersion.version+'.js"></script>');
  }
  const session=await requireSession(env,request);
  if(path==='/api/recommendation-discovery'&&request.method==='GET')return json(await discoveredRecommendations(env));
@@ -101,7 +103,8 @@ function quoteOrigins(env:Env){return [env.PUBLIC_SITE_URL,...(env.QUOTE_ALLOWED
 const worker={
  async fetch(request:Request,env:Env){
   let response:Response;
-  try{response=await handle(request,env);}catch(error){response=error instanceof AdminError?json({error:error.message},error.status):error instanceof z.ZodError?json({error:error.issues[0]?.message??'Confira os campos.'},400):json({error:'Não foi possível concluir a operação. Tente novamente.'},503);if(error instanceof QuoteAIError)response.headers.set('X-Quote-Failure',error.diagnostic);}
+  try{response=await handle(request,env);}catch(error){response=error instanceof AdminError?json({error:error.message},error.status):error instanceof z.ZodError?json({error:validationMessage(error)},400):json({error:'Não foi possível concluir a operação. Tente novamente.'},503);if(error instanceof QuoteAIError)response.headers.set('X-Quote-Failure',error.diagnostic);}
+  response.headers.set('X-Editorial-Version',assetVersion.version);
   if(new URL(request.url).pathname==='/api/quotes/suggest'&&quoteOrigins(env).includes(request.headers.get('Origin')??'')){
    response.headers.set('Access-Control-Allow-Origin',request.headers.get('Origin')!);response.headers.set('Vary','Origin');response.headers.set('Access-Control-Allow-Methods','POST, OPTIONS');response.headers.set('Access-Control-Allow-Headers','Content-Type');response.headers.set('Cache-Control','no-store');
   }return response;

@@ -247,3 +247,10 @@ it('persiste e remove ordem de destaque, preserva valor em clientes antigos e re
  saved=await mutateWorkspace(root,await article({kind:'opinion',category:'Economia',featuredOrder:null}),actor);
  expect(saved.data.articles[0]!.featuredOrder).toBeNull();
 });
+
+it('salva aprovação com tags vazias ou vírgula final sem inserir tags inválidas',async()=>{
+ const saved=await mutateWorkspace(root,await article({status:'published',approved:true,tags:['suporte','  ','']}),actor);
+ expect(saved.data.articles[0]!.status).toBe('published');
+ expect(saved.data.articles[0]!.tags).toEqual(['suporte']);
+ await expect(mutateWorkspace(root,await article({status:'published',approved:false}),actor)).rejects.toThrow('Confirme a revisão');
+});

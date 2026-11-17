@@ -1,4 +1,6 @@
 "use client";
+import {mutationSchema} from '../lib/mutation-input';
+import {validationMessage} from '../lib/validation-message';
 import {BrandLogo} from "../../src/components/BrandLogo";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -163,14 +165,29 @@ export function Dashboard({
     setTab(next);
   }
   async function save(input: object) {
-    if (!workspace || busy || suggestingTitle) return;
+    if (!workspace) {setMessage('O conteúdo não carregou. Recarregue a lista antes de salvar.');return;}
+    if (busy) return;
+    if (suggestingTitle) {setMessage('Aguarde a sugestão de título terminar antes de salvar.');return;}
+    const parsed=mutationSchema.safeParse({...input,revision:workspace.revision});
+    if(!parsed.success){setMessage(validationMessage(parsed.error));document.getElementById('editor-feedback')?.focus();return;}
+    if(parsed.data.action==='article' && parsed.data.status==='published'){
+      const article=parsed.data;
+      const author=workspace.data.authors.find(a=>a.id===article.authorId);
+      const issues=[];
+      if(!parsed.data.approved)issues.push('Marque a confirmação de revisão no início do formulário para salvar a aprovação.');
+      if(!author || author.status!=='published' || !author.ownerApprovedAt)issues.push('Aprove o autor na seção Autoria antes de aprovar a postagem.');
+      if(!parsed.data.sourceIds.length)issues.push('Selecione pelo menos uma fonte revisada antes de aprovar a postagem.');
+      if(parsed.data.sourceIds.some(id=>!workspace.data.sources.some(source=>source.id===id && source.status==='published')))issues.push('As fontes selecionadas precisam estar revisadas na seção Fontes.');
+      if(issues.length){setMessage(issues.join(' '));document.getElementById('editor-feedback')?.focus();return;}
+    }
     setBusy(true);
     setMessage("Salvando…");
     try {
       const response = await fetch("/api/workspace", {
         method: "POST",
+        signal: AbortSignal.timeout(20000),
         headers: { "Content-Type": "application/json", "X-CSRF-Token": csrf },
-        body: JSON.stringify({ ...input, revision: workspace.revision }),
+        body: JSON.stringify(parsed.data),
       });
       const result = await response.json();
       if (response.status === 401) {
@@ -183,13 +200,15 @@ export function Dashboard({
       setDirty(false);
       setActiveResource(null);
       setMessage(
-        "Conteúdo salvo. As alterações no site público dependem da geração e entrega de uma nova versão.",
+        "Postagem salva. Para enviar os conteúdos aprovados ao site, volte às postagens e clique em Publicar alterações no site.",
       );
       if ("slug" in input) setEditing(true);
+      document.getElementById("editor-feedback")?.focus();
     } catch (error) {
-      setMessage(
-        error instanceof Error ? error.message : "Não foi possível salvar.",
-      );
+      setMessage(error instanceof Error && (error.name === 'TimeoutError' || error.name === 'AbortError')
+        ? 'O servidor demorou para responder. Seu texto permanece no editor; recarregue a lista em outra aba antes de tentar novamente.'
+        : error instanceof Error ? error.message : 'Não foi possível salvar. Seu texto foi mantido no editor.');
+      document.getElementById('editor-feedback')?.focus();
     } finally {
       setBusy(false);
     }
@@ -295,7 +314,7 @@ export function Dashboard({
           <button aria-current={tab === "hardware" ? "page" : undefined} onClick={()=>navigate("hardware")}>Produtos e comparadores</button>
         </nav>
         <main id="conteudo" tabIndex={-1}>
-          <p role="status" className="status-message">
+          <p id="editor-feedback" tabIndex={-1} role="status" className="status-message">
             {message}
           </p>
           {!workspace ? (
@@ -347,7 +366,7 @@ export function Dashboard({
                             <p>{article.category}</p>
                             <p className="muted">{article.description}</p>
                           </div>
-                          <button onClick={() => edit(article)}>Editar</button>
+                          <button className="edit-post" aria-label={`Editar postagem: ${article.title}`} onClick={() => edit(article)}>Editar postagem</button>
                         </li>
                       ))}
                     </ul>
@@ -389,11 +408,17 @@ export function Dashboard({
               {tab === "editor" && (
                 <section>
                   <div className="page-heading">
+                    <div><button className="back-posts" type="button" disabled={busy} onClick={() => navigate("articles")}>Voltar às postagens</button>
                     <h1>{editing ? "Editar postagem" : "Nova postagem"}</h1>
-                    <button onClick={() => setPreview(!preview)}>
+                    <p className="muted">{dirty ? "Alterações não salvas" : editing ? "Postagem salva" : "Preencha os campos e salve seu rascunho."}</p></div>
+                    <div className="actions editor-actions">
+                    <button type="button" disabled={busy} onClick={() => setPreview(!preview)}>
                       {preview ? "Voltar ao editor" : "Ver prévia"}
                     </button>
+                    <button className="button" form="article-form" type="submit" disabled={preview || busy || suggestingTitle}>{busy ? "Salvando…" : draft.status === "published" ? "Salvar aprovação" : "Salvar postagem"}</button>
+                    </div>
                   </div>
+                  {message && <p className="editor-save-feedback" role="status">{message}</p>}
                   {preview ? (
                     <article className="preview">
                       <p className="badge">Prévia de rascunho</p>
@@ -426,6 +451,7 @@ export function Dashboard({
                   ) : (
                     <form
                       id="article-form"
+                      noValidate
                       onSubmit={(e) => {
                         e.preventDefault();
                         void save({
@@ -435,6 +461,21 @@ export function Dashboard({
                         });
                       }}
                     >
+                      {draft.status === "published" && (
+                        <label className="check notice">
+                          <input
+                            type="checkbox"
+                            required
+                            checked={draft.approved}
+                            onChange={(e) =>
+                              change("approved", e.target.checked)
+                            }
+                          />
+                          Revisei este conteúdo, suas fontes, método e
+                          limitações e autorizo sua inclusão na próxima versão
+                          do site.
+                        </label>
+                      )}
                       <div className="form-grid">
                         <Field label="Tipo de publicação">
                           <select value={draft.kind === "news" ? "opinion" : draft.kind} onChange={e=>change("kind",e.target.value as Draft["kind"])}>
@@ -543,7 +584,7 @@ export function Dashboard({
                       <div className="form-grid">
                         <Field label="Método e evidências">
                           <textarea
-                            required
+                            required maxLength={5000}
                             value={draft.methodology}
                             onChange={(e) =>
                               change("methodology", e.target.value)
@@ -552,7 +593,7 @@ export function Dashboard({
                         </Field>
                         <Field label="Limitações">
                           <textarea
-                            required
+                            required maxLength={5000}
                             value={draft.limitations}
                             onChange={(e) =>
                               change("limitations", e.target.value)
@@ -606,21 +647,6 @@ export function Dashboard({
                           <option value="archived">Arquivado</option>
                         </select>
                       </Field>
-                      {draft.status === "published" && (
-                        <label className="check notice">
-                          <input
-                            type="checkbox"
-                            required
-                            checked={draft.approved}
-                            onChange={(e) =>
-                              change("approved", e.target.checked)
-                            }
-                          />
-                          Revisei este conteúdo, suas fontes, método e
-                          limitações e autorizo sua inclusão na próxima versão
-                          do site.
-                        </label>
-                      )}
                       <button className="button" disabled={busy || suggestingTitle} type="submit">
                         {busy
                           ? "Salvando…"

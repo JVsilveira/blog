@@ -1,3 +1,4 @@
+import {validationMessage} from '../../../lib/validation-message';
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireSession, limitedJSON } from "../../../lib/request";
@@ -17,9 +18,7 @@ function failure(error: unknown) {
   if (error instanceof z.ZodError)
     return json(
       {
-        error: error.issues
-          .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
-          .join("; "),
+        error: validationMessage(error),
       },
       400,
     );

@@ -502,3 +502,11 @@ input[aria-invalid="true"], select[aria-invalid="true"], textarea[aria-invalid="
   .admin-nav { position: sticky; top: 24px; padding-block: 8px; }
   main:not(.login-page) { border: 1px solid var(--border); border-radius: var(--radius-panel); }
 }
+
+.back-posts { margin-bottom: 20px; color: var(--primary); border-color: var(--border); }
+.edit-post { flex-shrink: 0; color: var(--primary); border-color: var(--primary); }
+.editor-actions { justify-content: flex-end; }
+.status-message { scroll-margin-top: 24px; white-space: pre-line; }
+@media (max-width: 600px) { .editor-actions { width: 100%; justify-content: flex-start; } }
+
+.editor-save-feedback { padding: 16px; border: 1px solid var(--border); border-left: 3px solid var(--primary); background: var(--surface); white-space: pre-line; max-width: none; }

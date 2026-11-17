@@ -1,4 +1,6 @@
 import {build} from 'esbuild';
+import {createHash} from 'node:crypto';
+import {readFile} from 'node:fs/promises';
 import {mkdir,writeFile,cp,readdir} from 'node:fs/promises';
 import path from 'node:path';
 const routes=new Set<string>(['/']);
@@ -17,3 +19,11 @@ await cp('public/brand/silfontech-logo.svg','cloud-admin/public/brand/silfontech
 await cp('public/icon.svg','cloud-admin/public/icon.svg');
 await build({entryPoints:['cloud-admin/client/main.tsx'],bundle:true,minify:true,sourcemap:false,outdir:'cloud-admin/public/assets',format:'esm',target:'es2022',jsx:'automatic',define:{'process.env.NODE_ENV':'"production"'},alias:{'next/navigation':path.resolve('cloud-admin/client/navigation.ts'),'next/image':path.resolve('cloud-admin/client/image.tsx')}});
 console.log('Painel estático preparado; regras editoriais permanecem no servidor.');
+
+const script=await readFile('cloud-admin/public/assets/main.js');
+const css=await readFile('cloud-admin/public/assets/main.css');
+const version=createHash('sha256').update(script).update(css).digest('hex').slice(0,12);
+await writeFile(`cloud-admin/public/assets/main-${version}.js`,script);
+await writeFile(`cloud-admin/public/assets/main-${version}.css`,css);
+await writeFile('cloud-admin/asset-version.json',JSON.stringify({version}));
+console.log('Versão de assets editorial: '+version);

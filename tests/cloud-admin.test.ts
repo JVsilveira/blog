@@ -222,3 +222,16 @@ it('envia somente escopo técnico ao Gemini e falha sem fallback quando desativa
  const result=await worker.fetch(req(),{...env,QUOTE_AI_ENABLED:'true',GEMINI_API_KEY:'private-test-key'});expect(result.status).toBe(200);expect((await result.json()).items[0].suggestedCents).toBe(18000);
  const sent=JSON.parse((fetcher.mock.calls as unknown as [string,RequestInit][])[0]![1].body as string);expect(JSON.parse(sent.input)).toEqual(body);expect(sent.store).toBe(false);expect(sent.tools).toBeUndefined();
 });
+
+it('HTTP salva aprovação, reabre revisão persistida e confirma publicação sem perder edição',async()=>{
+ const headers=session();
+ let r=await worker.fetch(request('/api/workspace',{method:'POST',headers,body:JSON.stringify(article())}),env);
+ expect(r.status).toBe(200);let saved=await r.json();
+ r=await worker.fetch(request('/api/workspace',{method:'POST',headers,body:JSON.stringify({...article(saved.revision),creating:false,status:'published',approved:true,title:'Edição aprovada HTTP',tags:['teste','']})}),env);
+ expect(r.status).toBe(200);saved=await r.json();
+ const reread=await (await worker.fetch(request('/api/workspace',{headers}),env)).json();
+ expect(reread.revision).toBe(saved.revision);expect(reread.data.articles[0].title).toBe('Edição aprovada HTTP');expect(reread.data.articles[0].tags).toEqual(['teste']);
+ vi.stubGlobal('fetch',vi.fn(async(input:RequestInfo|URL)=>String(input).includes('api.cloudflare.com')?Response.json({success:true}):Response.json({revision:saved.revision})));
+ r=await worker.fetch(request('/api/build',{method:'POST',headers}),env);expect(r.status).toBe(202);
+ const status=await (await worker.fetch(request('/api/build',{headers}),env)).json();expect(status.job.state).toBe('success');
+});

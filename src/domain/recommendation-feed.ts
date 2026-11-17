@@ -11,6 +11,6 @@ export const recommendationCardSchema=z.object({
  price:z.object({amountCents:z.number().int().positive().max(Number.MAX_SAFE_INTEGER),regularCents:z.number().int().positive().max(Number.MAX_SAFE_INTEGER).nullable(),currency:z.literal('BRL'),itemId:z.string().regex(/^MLB\d{5,20}$/),observedAt:z.iso.datetime(),expiresAt:z.iso.datetime(),source:z.enum(['sale_price','catalog_items']),scope:z.enum(['linked_item','catalog_from'])}).nullable(),
 });
 export type RecommendationCard=z.infer<typeof recommendationCardSchema>;
-export const recommendationFeedSchema=z.object({items:z.array(recommendationCardSchema).max(24)});
+export const recommendationFeedSchema=z.object({items:z.array(recommendationCardSchema).max(96)});
 export function currentPrice(card:RecommendationCard,now:number){const price=card.price;return card.state==='active'&&price&&Date.parse(price.observedAt)<=now&&Date.parse(price.expiresAt)>now?price:null;}
 export function discountPercent(card:RecommendationCard,now:number){const price=currentPrice(card,now);return price?.regularCents&&price.regularCents>price.amountCents?Math.floor((price.regularCents-price.amountCents)*100/price.regularCents):0;}
