@@ -1,7 +1,7 @@
 'use client';
 import {useEffect,useState,useMemo,useSyncExternalStore} from 'react';
 import {hardwareSchema,type Hardware,type HardwareKind} from '../../domain/hardware/contracts';
-import {hardwareFeedSchema,type HardwareFeed} from '../../domain/hardware/feed';
+import {hardwareAssetPayload,hardwareFeedSchema,type HardwareFeed} from '../../domain/hardware/feed';
 import {isMobileDevice} from '../../domain/hardware/devices';
 import {phoneRankingSchema,type PhoneRanking} from '../../domain/hardware/bestsellers';
 import {storeLinksSchema,type StoreLink} from '../../domain/hardware/retailers';
@@ -24,7 +24,7 @@ export function HardwareExplorer({items,kind,kindLabel,path}:{items:Hardware[];k
  const options=useMemo(()=>(feed?[...items.filter(i=>i.publication!=='provider'),...feed.items]:items).filter(i=>i.kind===kind&&(kind!=='phone'||isMobileDevice(i))),[feed,items,kind]);
  useEffect(()=>{
   const needed=ids.filter(id=>!loaded[feed?.items.find(i=>i.id===id)?.asset??id]);if(!needed.length)return;const controller=new AbortController();
-  void Promise.all(needed.map(async id=>{const summary=feed?.items.find(i=>i.id===id);if(!summary)throw new Error('Modelo indisponível.');const response=await fetch(summary.asset,{signal:controller.signal});if(!response.ok)throw new Error();const item=hardwareSchema.parse(await response.json());if(item.id!==id||item.kind!==kind||(kind==='phone'&&!isMobileDevice(item))||item.status!=='published'||item.demonstration)throw new Error();return {item,asset:summary.asset};})).then(records=>{if(!controller.signal.aborted){setLoaded(current=>({...current,...Object.fromEntries(records.map(({item,asset})=>[asset,item]))}));setError('');}}).catch(()=>{if(!controller.signal.aborted)setError('Não foi possível carregar a ficha. Tente novamente.');});
+  void Promise.all(needed.map(async id=>{const summary=feed?.items.find(i=>i.id===id);if(!summary)throw new Error('Modelo indisponível.');const response=await fetch(summary.asset,{signal:controller.signal});if(!response.ok)throw new Error();const item=hardwareSchema.parse(hardwareAssetPayload(await response.json(),summary.asset));if(item.id!==id||item.kind!==kind||(kind==='phone'&&!isMobileDevice(item))||item.status!=='published'||item.demonstration)throw new Error();return {item,asset:summary.asset};})).then(records=>{if(!controller.signal.aborted){setLoaded(current=>({...current,...Object.fromEntries(records.map(({item,asset})=>[asset,item]))}));setError('');}}).catch(()=>{if(!controller.signal.aborted)setError('Não foi possível carregar a ficha. Tente novamente.');});
   return()=>controller.abort();
  },[ids,feed,kind,loaded,retry]);
  const ready=options.flatMap(option=>loaded['asset' in option?option.asset:option.id]??[]),waiting=ids.some(id=>!loaded[feed?.items.find(i=>i.id===id)?.asset??id]);
