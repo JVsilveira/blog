@@ -211,7 +211,11 @@ export function Dashboard({
       setDirty(false);
       setActiveResource(null);
       setMessage(
-        "Postagem salva. Para enviar os conteúdos aprovados ao site, volte às postagens e clique em Publicar alterações no site.",
+        parsed.data.action === 'article'
+          ? "Postagem salva. Para enviar os conteúdos aprovados ao site, volte às postagens e clique em Publicar alterações no site."
+          : parsed.data.action === 'source'
+            ? "Fonte salva. O formulário Nova fonte está vazio e pronto para outro cadastro."
+            : "Autor salvo.",
       );
       if ("slug" in input) setEditing(true);
       document.getElementById("editor-feedback")?.focus();
@@ -745,6 +749,7 @@ export function Dashboard({
                   ))}
                   <h2>Nova fonte</h2>
                   <SourceForm
+                    key={`new-source:${workspace.revision}`}
                     busy={
                       busy ||
                       !!(activeResource && activeResource !== "new-source")
