@@ -84,7 +84,18 @@ export function Dashboard({
   const [activeResource, setActiveResource] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [suggestingTitle, setSuggestingTitle] = useState(false);
-  const [message, setMessage] = useState("");
+  const [message, setMessageState] = useState("");
+  const [feedbackSequence, setFeedbackSequence] = useState(0);
+  const setMessage = useCallback((next: string) => {
+    setMessageState(next);
+    setFeedbackSequence(sequence => sequence + 1);
+  }, []);
+  useEffect(() => {
+    if (!message || message === 'Salvando…') return;
+    const feedback = document.getElementById('editor-feedback');
+    feedback?.focus();
+    feedback?.scrollIntoView({block:'center'});
+  }, [message, feedbackSequence]);
   const [query, setQuery] = useState("");
   const [job, setJob] = useState<BuildJob | null>(null);
   const building = job?.state === "queued" || job?.state === "running";
@@ -145,7 +156,7 @@ export function Dashboard({
         error instanceof Error ? error.message : "Não foi possível carregar.",
       );
     }
-  }, [router]);
+  }, [router, setMessage]);
   useEffect(() => {
     const warn = (event: BeforeUnloadEvent) => {
       if (dirty) event.preventDefault();
