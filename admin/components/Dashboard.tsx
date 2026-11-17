@@ -270,6 +270,11 @@ export function Dashboard({
     }));
     setDirty(true);
   }
+  const approvalPending = workspace ? [
+    ...(!draft.sourceIds.length ? ['Selecione pelo menos uma fonte da postagem.'] : []),
+    ...(draft.sourceIds.some(id=>!workspace.data.sources.some(source=>source.id===id && source.status==='published')) ? ['Uma fonte selecionada ainda não foi aprovada. Revise-a na seção Fontes.'] : []),
+    ...(!workspace.data.authors.some(author=>author.id===draft.authorId && author.status==='published' && author.ownerApprovedAt) ? ['O autor precisa estar aprovado na seção Autoria.'] : []),
+  ] : [];
   const articles =
     workspace?.data.articles.filter((a) =>
       `${a.title} ${a.category}`
@@ -415,7 +420,7 @@ export function Dashboard({
                     <button type="button" disabled={busy} onClick={() => setPreview(!preview)}>
                       {preview ? "Voltar ao editor" : "Ver prévia"}
                     </button>
-                    <button className="button" form="article-form" type="submit" disabled={preview || busy || suggestingTitle}>{busy ? "Salvando…" : draft.status === "published" ? "Salvar aprovação" : "Salvar postagem"}</button>
+                    <button className="button" form="article-form" type="submit" disabled={preview || busy || suggestingTitle}>{busy ? "Salvando…" : suggestingTitle ? "Aguarde o título…" : draft.status === "published" ? "Salvar aprovação" : "Salvar postagem"}</button>
                     </div>
                   </div>
                   {message && <p className="editor-save-feedback" role="status">{message}</p>}
@@ -461,6 +466,12 @@ export function Dashboard({
                         });
                       }}
                     >
+                      {draft.status === "published" && approvalPending.length > 0 && <section className="notice approval-pending" aria-label="Pendências para aprovação">
+                        <h2>O que falta para aprovar</h2>
+                        <ul>{approvalPending.map(item=><li key={item}>{item}</li>)}</ul>
+                        <p>A confirmação de revisão não substitui a seleção e aprovação das fontes. Salve como rascunho se precisar revisar esses cadastros antes de continuar.</p>
+                        <button type="button" onClick={()=>document.getElementById('article-sources')?.scrollIntoView({block:'center'})}>Ver fontes desta postagem</button>
+                      </section>}
                       {draft.status === "published" && (
                         <label className="check notice">
                           <input
@@ -601,7 +612,7 @@ export function Dashboard({
                           />
                         </Field>
                       </div>
-                      <fieldset>
+                      <fieldset id="article-sources">
                         <legend>Fontes da postagem</legend>
                         {workspace.data.sources.length ? (
                           workspace.data.sources.map((source) => (

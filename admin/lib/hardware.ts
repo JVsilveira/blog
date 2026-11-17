@@ -40,7 +40,7 @@ export async function queueHardware(root:string,mode:'index'|'import'|'sync',inp
 }
 const comparable=(item:Hardware)=>({kind:item.kind,name:item.name,brand:item.brand,modelCode:item.modelCode,image:item.image,deviceType:item.deviceType,specifications:item.specifications.map(({key,group,label,value,unit,displayValue})=>({key,group,label,value,unit,displayValue:displayValue??null}))});
 export function mergeHardware(fresh:Hardware,prior:Hardware|undefined):{item:Hardware;status:string}{
- const now=fresh.updatedAt;
+ const now=new Date().toISOString();
  const identity=fresh.specifications.filter(s=>/^(internal memory|internal storage capacity|internal memory type|memory layout \(modules x size\)|memory clock speed|processor socket|processor model|processor family|ram capacity)$/i.test(s.label)&&s.value!==null).slice(0,5).map(s=>`${s.label}: ${s.displayValue??s.value}${s.displayValue?'':s.unit?' '+s.unit:''}`);
  const source={...fresh.source,license:'Open Icecat Open Content License',licenseUrl:'https://iceclog.com/open-content-license/'};
  const unchanged=prior?.publication==='provider'&&prior.status==='published'&&digest(comparable(prior))===digest(comparable(fresh));

@@ -906,3 +906,11 @@ Painel: validação compartilhada cliente/servidor, limpeza de tags vazias, mens
 Falha de entrega pública confirmada nos logs do Pages: importação recusava recommendations.items acima de 24; painel já exporta até 96. Contrato do snapshot alinhado ao teto de 96, preservando validação de cada produto e sem inventar/remover produtos. Teste cobre 51 válidos e rejeição de 97.
 
 Validação: lint, typechecks e build do painel passaram. 49 testes de workspace/Worker/contrato passaram. Chromium com Worker real e SQLite descartável: editar artigo existente, salvar aprovação HTTP200, revisão alterada, persistência após reload, publicar HTTP202 e confirmar revisão; apenas hook/site externos simulados. Rotas privadas exigem autenticação. Nenhum teste alterou postagem real. A publicação do Pages precisa ser confirmada após este commit; não declarar sucesso de build antecipadamente.
+
+### Validação e entrega confirmadas — 16/11/2026
+
+Build Pages 2aa1e6ea do commit 0abc320 concluiu success após alinhar limite de recomendações. Comparação com deploy anterior df1c8659 confirmou os mesmos 22.224 IDs e caminhos imutáveis (7299 celulares, 7278 CPUs, 7647 RAM). Catálogo restaurado com release completo em 73ad7e8d.blog-16e.pages.dev, sem fichas novas ou publicação de drafts. Novo build preserva arquivos públicos do próprio domínio quando runtime não estiver no checkout; falha fechada impede esvaziar comparadores. Não faz scraping de fornecedor.
+
+Diagnóstico em memória do snapshot real, sem salvar: quatro postagens draft; duas com fonte não aprovada e duas sem fontes. Aprovação continua bloqueada até revisão humana. Painel expõe essas pendências junto às ações e oferece acesso aos campos de fontes. Nenhum autor/fonte/postagem foi aprovado por automação. Worker e2bb92e0 publicado com assets versionados 2cfa6b172228.
+
+Suite completa: 272 testes/40 arquivos passaram, além de lint/typechecks. Corrigida também retomada de hardware: lastSyncedAt indica execução atual, preservando updatedAt da ficha. Teste de retomada agora avança de 100 para 105 sem repetir dados antigos. Build isolado de produção validou snapshot real e manteve catálogos; backend de integração em SQLite descartável comprovou salvar HTTP200, persistência e publicação HTTP202/confirmada. Não equivale a login humano real ou aprovação dos drafts existentes.

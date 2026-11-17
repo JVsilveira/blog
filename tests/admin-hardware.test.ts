@@ -21,7 +21,7 @@ it('importa todas as especificações e disponibiliza automaticamente sem aprova
 it('sincroniza ficha idêntica e alterações sem exigir revisão humana',()=>{
  const prior=mergeHardware(fresh(),undefined).item;
  const incoming={...fresh(),updatedAt:'2026-10-24T12:00:00Z'};
- const same=mergeHardware(incoming,prior);expect(same.status).toBe('unchanged');expect(same.item.reviewedAt).toBe(prior.reviewedAt);expect(same.item.lastSyncedAt).toBe(incoming.updatedAt);
+ const beforeSync=Date.now();const same=mergeHardware(incoming,prior);expect(same.status).toBe('unchanged');expect(same.item.reviewedAt).toBe(prior.reviewedAt);expect(Date.parse(same.item.lastSyncedAt!)).toBeGreaterThanOrEqual(beforeSync);expect(Date.parse(same.item.lastSyncedAt!)).toBeLessThanOrEqual(Date.now());expect(same.item.updatedAt).toBe(prior.updatedAt);
  incoming.specifications=structuredClone(incoming.specifications);incoming.specifications[0]!.value=99;
  const changed=mergeHardware(incoming,prior);expect(changed.status).toBe('updated');expect(changed.item.status).toBe('published');expect(changed.item.reviewedAt).toBeNull();expect(changed.item.publication).toBe('provider');
 });
